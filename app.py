@@ -10,8 +10,8 @@ st.set_page_config(page_title="Panel Países & Productos", layout="wide")
 def load_data():
     # 注意：确保这里的文件名与您上传至GitHub的文件名一致
     df_paises = pd.read_csv('paises.csv')
-    df_productos = pd.read_csv('productos (2).csv')
-    df_prioridad = pd.read_csv('prioridad (2).csv')
+    df_productos = pd.read_csv('productos.csv')
+    df_prioridad = pd.read_csv('prioridad.csv')
     
     # 将日期列转换为 datetime 格式以便进行时间段过滤
     # 日期格式似乎为 dd/mm/yyyy，errors='coerce' 会把空值或错误值变成 NaT
