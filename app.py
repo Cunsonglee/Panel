@@ -111,26 +111,26 @@ elif view == "Productos":
         st.success("¡Base de productos actualizada!")
         st.rerun()
 
-# ==================== 视图 3: PRIORIDAD (Cálculo Refinado) ====================
+# ==================== 视图 3: PRIORIDAD (仅计算活跃产品) ====================
 elif view == "Prioridad":
     st.title("Cálculo de Prioridad y Mantenimiento")
     
-    with st.expander("📖 Metodología de Cálculo (Basado en documentación oficial)"):
+    with st.expander("📖 Metodología de Cálculo (Refinada)"):
         st.markdown("""
-        * **C1 - Clientes/Año:** Basado en el volumen de visas tramitadas.
-        * **C2 - Nº Productos:** (¡Automático!) Cantidad de productos activos por país contabilizados directamente del panel Maestro.
-        * **C3 - Complejidad del Formulario:** Combinación máxima posible + media de documentos.
-        * **C4 - Recencia:** Días transcurridos desde la última revisión.
+        * **C1 - Clientes/Año:** Volumen de visas tramitadas (Stroper).
+        * **C2 - Nº Productos Activos:** (¡Automático!) Solo se cuentan los productos con estado **'Activo'** en la base maestra.
+        * **C3 - Complejidad:** Basado en la combinación máxima de preguntas y documentos.
+        * **C4 - Recencia:** Días desde la última actualización en Jira.
         """)
     
     st.markdown("### ⚖️ Ajuste de Pesos (W)")
     w_col1, w_col2, w_col3, w_col4 = st.columns(4)
     w_c1 = w_col1.number_input("C1: Clientes (W1)", value=0.45, step=0.05)
-    w_c2 = w_col2.number_input("C2: Productos (W2)", value=0.15, step=0.05)
+    w_c2 = w_col2.number_input("C2: Prod. Activos (W2)", value=0.15, step=0.05)
     w_c3 = w_col3.number_input("C3: Complejidad (W3)", value=0.25, step=0.05)
     w_c4 = w_col4.number_input("C4: Recencia (W4)", value=0.15, step=0.05)
     
-    # 1. 提取基础列 (去掉了 n_productos，因为我们要让它全自动)
+    # 1. 提取基础列
     prio_cols = [
         'País', 'ISO3', 'Estado_País', 
         'clientes365', 'n_preguntas', 'n_documentos', 'complejidadScore', 
@@ -140,24 +140,26 @@ elif view == "Prioridad":
     exist_cols = [c for c in prio_cols if c in df_master.columns]
     df_prio = df_master[exist_cols].drop_duplicates(subset=['País']).copy()
     
-    for required_col in ['clientes365', 'complejidadScore', 'daysSince']:
-        if required_col not in df_prio.columns:
-            df_prio[required_col] = 0
-            
     # ==========================================
-    # 🚀 核心更新：动态统计 C2 (产品数)
-    # 统计每个国家不为空的 Producto 数量
+    # 🚀 核心更新：仅统计 Estado_Producto == 'Activo' 的数量
     # ==========================================
-    conteo_productos = df_master.groupby('País')['Producto'].apply(lambda x: x.notna().sum()).reset_index(name='n_productos')
-    df_prio = pd.merge(df_prio, conteo_productos, on='País', how='left')
+    # 先筛选活跃产品
+    df_activos_only = df_master[df_master['Estado_Producto'] == 'Activo']
+    # 统计数量
+    conteo_activos = df_activos_only.groupby('País')['Producto'].count().reset_index(name='n_productos')
+    # 合并回优先级表，缺失的国家填充为 0
+    df_prio = pd.merge(df_prio, conteo_activos, on='País', how='left')
+    df_prio['n_productos'] = df_prio['n_productos'].fillna(0)
     
     # 2. 核心分数计算
     def get_scores(df):
         temp = df.copy()
-        
-        for c in ['clientes365', 'n_productos', 'complejidadScore', 'daysSince']:
+        # 确保计算列为数值
+        calc_cols = ['clientes365', 'n_productos', 'complejidadScore', 'daysSince']
+        for c in calc_cols:
             temp[c] = pd.to_numeric(temp[c], errors='coerce').fillna(0)
         
+        # 优先级公式
         s01 = (
             (temp['clientes365'] * w_c1) + 
             (temp['n_productos'] * w_c2) + 
@@ -181,7 +183,6 @@ elif view == "Prioridad":
     # 3. 界面展示
     st.markdown("### 📊 Tabla de Prioridades")
     
-    # 把 n_productos 也加入禁用编辑的名单中，因为它现在是代码算出来的
     disabled_columns = ["score100", "nivel", "País", "ISO3", "n_productos"]
     
     edited_prio = st.data_editor(
@@ -191,23 +192,21 @@ elif view == "Prioridad":
         disabled=disabled_columns,
         column_config={
             "Estado_País": st.column_config.SelectboxColumn("Estado País", options=["Activo", "Inactivo", "No implementado"]),
-            "score100": st.column_config.ProgressColumn("Score", format="%f", min_value=0, max_value=100),
-            "n_productos": st.column_config.NumberColumn("Nº Productos (C2)", help="Calculado automáticamente contando las filas en Productos")
+            "score100": st.column_config.ProgressColumn("Score", format="%d", min_value=0, max_value=100),
+            "n_productos": st.column_config.NumberColumn("Prod. Activos (C2)", help="Contatización automática de productos 'Activo' en el Maestro")
         }
     )
 
-    # 4. 保存逻辑
+    # 4. 保存逻辑 (保存时自动剔除动态计算列)
     if not edited_prio.equals(df_prio_calc):
-        # 剔除自动计算的列后再保存回主表
         clean_prio = edited_prio.drop(columns=["score100", "nivel", "n_productos"], errors='ignore')
-        
         for index, row in clean_prio.iterrows():
             pais_name = row['País']
-            update_cols = clean_prio.columns
-            df_master.loc[df_master['País'] == pais_name, update_cols] = row.values
+            update_target = clean_prio.columns
+            df_master.loc[df_master['País'] == pais_name, update_target] = row.values
             
         save_master(df_master)
-        st.success("¡Métricas de prioridad actualizadas y guardadas en el Maestro!")
+        st.success("¡Métricas guardadas! El Score se ha recalculado basándose en productos activos.")
         st.rerun()
 
 # ==================== 视图 4: RESUMEN ====================
