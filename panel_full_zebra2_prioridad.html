@@ -1,0 +1,5347 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel Países & Productos</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f5fb;
+      color: #1f2933;
+    }
+
+    .app { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      width: 220px;
+      background: #111827;
+      color: #f9fafb;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .logo {
+      font-weight: 700;
+      font-size: 18px;
+      margin-bottom: 24px;
+    }
+
+    .menu { display: flex; flex-direction: column; gap: 8px; }
+
+    .menu-item {
+      background: transparent;
+      border: none;
+      color: #e5e7eb;
+      padding: 10px 12px;
+      text-align: left;
+      border-radius: 8px;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .menu-item.active {
+      background: #2563eb;
+      color: #ffffff;
+    }
+
+    .menu-item:hover { background: #1f2937; }
+
+    .main {
+      flex: 1;
+      padding: 20px 24px;
+      overflow: auto;
+    }
+
+    .view { display: none; }
+    .view.active { display: block; }
+
+    .view-header h1 {
+      margin: 0 0 12px 0;
+      font-size: 22px;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .toolbar label {
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toolbar select,
+    .toolbar input[type="date"] {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      font-size: 14px;
+    }
+
+    .toolbar button { margin-left: auto; }
+
+    .btn {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: none;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn.secondary { background: #e5e7eb; color: #111827; }
+    .btn.small { padding: 4px 8px; font-size: 12px; }
+    .btn:disabled { opacity: 0.6; cursor: default; }
+
+    /* Botones pequeños de ordenación ▲ ▼ */
+    .sort-btn {
+      border: none;
+      background: transparent;
+      padding: 0 2px;
+      cursor: pointer;
+      font-size: 11px;
+      line-height: 1;
+    }
+    .sort-btn.active {
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    .table-container {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+      padding: 12px;
+      overflow: auto;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 14px; }
+
+    thead { background: #f3f4f6; }
+
+    th, td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+
+    th { font-weight: 600; white-space: nowrap; }
+
+    tbody tr.row-bg-light {
+      background: #ffffff;
+    }
+
+    tbody tr.row-bg-alt {
+      background: #f3f4f6;
+    }
+
+    /* Hover sigue funcionando por encima del rayado */
+    tbody tr.row-bg-light:hover,
+    tbody tr.row-bg-alt:hover {
+      background: #e5e7eb;
+    }
+
+    td .country-name { font-weight: 500; }
+    td .country-code { font-size: 12px; color: #6b7280; }
+
+    .badge {
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      display: inline-block;
+    }
+
+    .badge.activo { background: #dcfce7; color: #166534; }
+    .badge.inactivo { background: #fee2e2; color: #b91c1c; }
+    .badge.no-implementado { background: #e5e7eb; color: #374151; }
+
+    /* Accordion */
+
+    .accordion-list { display: flex; flex-direction: column; gap: 10px; }
+
+    .accordion {
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .accordion-header {
+      padding: 10px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+    }
+
+    .accordion-title { display: flex; flex-direction: column; gap: 4px; }
+    .accordion-subtitle { font-size: 13px; color: #6b7280; }
+
+    .accordion-toggle {
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 16px;
+      transition: transform 0.15s ease;
+    }
+
+    .accordion-body {
+      padding: 10px 12px 12px;
+      border-top: 1px solid #e5e7eb;
+      display: none;
+    }
+
+    .accordion.open .accordion-body { display: block; }
+    .accordion.open .accordion-toggle { transform: rotate(180deg); }
+
+    /* Modal */
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal-backdrop.hidden { display: none; }
+
+    .modal {
+      background: white;
+      border-radius: 12px;
+      padding: 16px 18px;
+      width: 420px;
+      max-width: 95vw;
+      box-shadow: 0 20px 50px rgba(15, 23, 42, 0.3);
+    }
+
+    .modal-header h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+
+    .modal-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-bottom: 10px;
+    }
+
+    .modal-field label {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .modal-field input,
+    .modal-field select,
+    .modal-field textarea {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #d1d5db;
+      font-size: 13px;
+    }
+
+    .modal-field textarea {
+      resize: vertical;
+      min-height: 64px;
+    }
+
+    .modal-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 12px; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="app">
+  <aside class="sidebar">
+    <div class="logo">Mi panel</div>
+    <nav class="menu">
+      <button class="menu-item active" data-view="paises">Países</button>
+      <button class="menu-item" data-view="productos">Productos</button>
+      <button class="menu-item" data-view="prioridad">Prioridad</button>
+      <button class="menu-item" data-view="resumen">Resumen</button>
+    </nav>
+  </aside>
+
+  <main class="main">
+    <!-- PAISES -->
+    <section id="view-paises" class="view active">
+      <div class="view-header">
+        <h1>Países</h1>
+      </div>
+      <div class="toolbar">
+        <label>Estado:
+          <select id="paises-estado-filter">
+            <option value="">Todos</option>
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+            <option value="No implementado">No implementado</option>
+          </select>
+        </label>
+        <button id="paises-export-btn" class="btn">Exportar a CSV</button>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+          <tr>
+            <th>País / ISO3</th>
+            <th>Estado</th>
+            <th>Implementación</th>
+            <th>Nota</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody id="paises-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PRODUCTOS -->
+    <section id="view-productos" class="view">
+      <div class="view-header">
+        <h1>Productos</h1>
+      </div>
+      <div class="toolbar" style="row-gap:8px; flex-direction:column; align-items:flex-start;">
+        <div style="display:flex; gap:12px; width:100%; align-items:center; flex-wrap:wrap;">
+          <label>Estado:
+            <select id="productos-estado-filter">
+              <option value="">Todos</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+            </select>
+          </label>
+          <button id="productos-export-btn" class="btn" style="margin-left:auto;">Exportar a CSV</button>
+        </div>
+        <div style="display:flex; gap:24px; flex-wrap:wrap; align-items:center;">
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:13px;">Actualización Completo:</span>
+            <input type="date" id="productos-comp-from">
+            <span>~</span>
+            <input type="date" id="productos-comp-to">
+          </div>
+          <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap;">
+            <span style="font-size:13px;">Actualización regla:</span>
+            <input type="date" id="productos-reg-from">
+            <span>~</span>
+            <input type="date" id="productos-reg-to">
+          </div>
+        </div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+          <tr>
+            <th>País / ISO3</th>
+            <th>Estado</th>
+            <th>Producto</th>
+            <th>
+              Actualización Completo
+              <button type="button"
+                      class="sort-btn"
+                      data-sort-col="comp"
+                      data-sort-dir="desc"
+                      title="Más reciente primero">▲</button>
+              <button type="button"
+                      class="sort-btn"
+                      data-sort-col="comp"
+                      data-sort-dir="asc"
+                      title="Más antiguo primero">▼</button>
+            </th>
+            <th>
+              Actualización regla
+              <button type="button"
+                      class="sort-btn"
+                      data-sort-col="reg"
+                      data-sort-dir="desc"
+                      title="Más reciente primero">▲</button>
+              <button type="button"
+                      class="sort-btn"
+                      data-sort-col="reg"
+                      data-sort-dir="asc"
+                      title="Más antiguo primero">▼</button>
+            </th>
+            <th>Nota</th>
+            <th></th>
+          </tr>
+          </thead>
+          <tbody id="productos-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- PRIORIDAD -->
+    <section id="view-prioridad" class="view">
+      <div class="view-header">
+        <h1>Prioridad (mantenimiento)</h1>
+      </div>
+
+      <div class="toolbar" style="row-gap:8px; flex-direction:column; align-items:flex-start;">
+        <div style="display:flex; gap:12px; width:100%; align-items:center; flex-wrap:wrap;">
+          <label>Estado país:
+            <select id="prioridad-estado-filter">
+              <option value="">Todos</option>
+              <option value="Activo">Activo</option>
+              <option value="Inactivo">Inactivo</option>
+              <option value="No implementado">No implementado</option>
+            </select>
+          </label>
+          <label>Búsqueda:
+            <input id="prioridad-search" type="text" placeholder="País o ISO3" style="padding:6px 8px; border-radius:6px; border:1px solid #d1d5db; font-size:14px;">
+          </label>
+
+          <button id="prioridad-export-btn" class="btn" style="margin-left:auto;">Exportar prioridad (CSV)</button>
+        </div>
+
+        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:flex-end;">
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            <div style="font-size:13px; color:#6b7280;">Pesos (suman 1 idealmente)</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <label style="font-size:13px;">Clientes (C1)
+                <input id="w-c1" type="number" step="0.05" value="0.45" style="width:90px; padding:6px 8px; border-radius:6px; border:1px solid #d1d5db;">
+              </label>
+              <label style="font-size:13px;">Productos (C2)
+                <input id="w-c2" type="number" step="0.05" value="0.15" style="width:90px; padding:6px 8px; border-radius:6px; border:1px solid #d1d5db;">
+              </label>
+              <label style="font-size:13px;">Complejidad (C3)
+                <input id="w-c3" type="number" step="0.05" value="0.25" style="width:90px; padding:6px 8px; border-radius:6px; border:1px solid #d1d5db;">
+              </label>
+              <label style="font-size:13px;">Recencia (C4)
+                <input id="w-c4" type="number" step="0.05" value="0.15" style="width:90px; padding:6px 8px; border-radius:6px; border:1px solid #d1d5db;">
+              </label>
+              <label style="font-size:13px;">Ventana recencia (días)
+                <input id="recency-window" type="number" step="1" value="180" style="width:110px; padding:6px 8px; border-radius:6px; border:1px solid #d1d5db;">
+              </label>
+              <button id="prioridad-recalc-btn" class="btn secondary" type="button">Recalcular</button>
+            </div>
+          </div>
+
+          <div style="display:flex; flex-direction:column; gap:6px; padding:10px 12px; border:1px solid #e5e7eb; border-radius:10px; background:#fff;">
+            <div style="font-size:13px; font-weight:600;">Importar métricas (C1/C3/ΔCVR)</div>
+            <div style="font-size:12px; color:#6b7280;">CSV o Excel (.xlsx). Si Excel no carga, exporta a CSV.</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+              <input id="metrics-file" type="file" accept=".csv,.xlsx,.xls" />
+              <button id="prioridad-import-btn" class="btn small" type="button">Importar</button>
+              <button id="prioridad-template-btn" class="btn small secondary" type="button">Plantilla CSV</button>
+              <button id="prioridad-export-metrics-btn" class="btn small secondary" type="button">Exportar métricas (CSV)</button>
+            </div>
+          </div>
+        </div>
+
+        <div id="prioridad-warn" style="font-size:13px; color:#b45309;"></div>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+          <tr>
+            <th>#</th>
+            <th>País / ISO3</th>
+            <th>Estado</th>
+            <th>Productos (total/activos)</th>
+            <th>Clientes (365d)</th>
+            <th>Complejidad</th>
+            <th>Últ. completo</th>
+            <th>Días desde</th>
+            <th>Score</th>
+            <th>Nivel</th>
+            <th>Nota</th>
+          </tr>
+          </thead>
+          <tbody id="prioridad-tbody"></tbody>
+        </table>
+      </div>
+    </section>
+
+
+    <!-- RESUMEN -->
+    <section id="view-resumen" class="view">
+      <div class="view-header">
+        <h1>Resumen</h1>
+      </div>
+      <div class="accordion-list">
+        <!-- 1 -->
+        <div class="accordion" data-panel="1">
+          <div class="accordion-header">
+            <div class="accordion-title">
+              <span>1. Países por estado</span>
+              <span class="accordion-subtitle" id="res-paises-count"></span>
+            </div>
+            <button class="accordion-toggle" type="button">▼</button>
+          </div>
+          <div class="accordion-body" id="res-paises-body"></div>
+        </div>
+
+        <!-- 2 -->
+        <div class="accordion" data-panel="2">
+          <div class="accordion-header">
+            <div class="accordion-title">
+              <span>2. Productos por estado</span>
+              <span class="accordion-subtitle" id="res-productos-count"></span>
+            </div>
+            <button class="accordion-toggle" type="button">▼</button>
+          </div>
+          <div class="accordion-body" id="res-productos-body"></div>
+        </div>
+
+        <!-- 3 -->
+        <div class="accordion" data-panel="3">
+          <div class="accordion-header">
+            <div class="accordion-title">
+              <span>3. Última actualización – Completo</span>
+              <span class="accordion-subtitle" id="res-ult-comp-count"></span>
+            </div>
+            <button class="accordion-toggle" type="button">▼</button>
+          </div>
+          <div class="accordion-body" id="res-ult-comp-body"></div>
+        </div>
+
+        <!-- 4 -->
+        <div class="accordion" data-panel="4">
+          <div class="accordion-header">
+            <div class="accordion-title">
+              <span>4. Última actualización – regla</span>
+              <span class="accordion-subtitle" id="res-ult-reg-count"></span>
+            </div>
+            <button class="accordion-toggle" type="button">▼</button>
+          </div>
+          <div class="accordion-body" id="res-ult-reg-body"></div>
+        </div>
+
+        <!-- 5 -->
+        <div class="accordion" data-panel="5">
+          <div class="accordion-header">
+            <div class="accordion-title">
+              <span>5. &gt; 6 meses sin actualización completa</span>
+            </div>
+            <button class="accordion-toggle" type="button">▼</button>
+          </div>
+          <div class="accordion-body" id="res-pend-comp-body"></div>
+        </div>
+
+        <!-- 6 -->
+        <div class="accordion" data-panel="6">
+          <div class="accordion-header">
+            <div class="accordion-title">
+              <span>6. &gt; 6 meses sin actualización (Completo + regla)</span>
+            </div>
+            <button class="accordion-toggle" type="button">▼</button>
+          </div>
+          <div class="accordion-body" id="res-pend-both-body"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Modal edición -->
+<div id="modal-backdrop" class="modal-backdrop hidden">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="modal-title"></h2>
+    </div>
+    <form id="modal-form">
+      <div id="modal-content"></div>
+      <div class="modal-actions">
+        <button type="button" id="modal-cancel" class="btn secondary">Cancelar</button>
+        <button type="submit" id="modal-save" class="btn">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  (function () {
+    // =======================
+    // 1) DATOS INICIALES
+    // =======================
+    // 👉 这里先放了一部分示例，你可以按同样结构把你全部国家 / 产品都加进来
+
+    // Países: country, ISO3, Estado, Implementación, Nota
+const countries = [
+  {
+    country: "Afganistán",
+    iso3: "AFG",
+    iso2: "AF",
+    isoNum: "004",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Albania",
+    iso3: "ALB",
+    iso2: "AL",
+    isoNum: "008",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Alemania",
+    iso3: "DEU",
+    iso2: "DE",
+    isoNum: "276",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Andorra",
+    iso3: "AND",
+    iso2: "AD",
+    isoNum: "020",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Angola",
+    iso3: "AGO",
+    iso2: "AO",
+    isoNum: "024",
+    estado: "Activo",
+    implementacion: "Pre-visa",
+    note: "ID 36"
+  },
+  {
+    country: "Anguilla",
+    iso3: "AIA",
+    iso2: "AI",
+    isoNum: "660",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Antigua y Barbuda",
+    iso3: "ATG",
+    iso2: "AG",
+    isoNum: "028",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 40"
+  },
+  {
+    country: "Antártida",
+    iso3: "ATA",
+    iso2: "AQ",
+    isoNum: "010",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Arabia Saudí",
+    iso3: "SAU",
+    iso2: "SA",
+    isoNum: "682",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 20"
+  },
+  {
+    country: "Argelia",
+    iso3: "DZA",
+    iso2: "DZ",
+    isoNum: "012",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Argentina",
+    iso3: "ARG",
+    iso2: "AR",
+    isoNum: "032",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Armenia",
+    iso3: "ARM",
+    iso2: "AM",
+    isoNum: "051",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 32"
+  },
+  {
+    country: "Aruba",
+    iso3: "ABW",
+    iso2: "AW",
+    isoNum: "533",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Australia",
+    iso3: "AUS",
+    iso2: "AU",
+    isoNum: "036",
+    estado: "Activo",
+    implementacion: "eVisitor",
+    note: "ID 2"
+  },
+  {
+    country: "Austria",
+    iso3: "AUT",
+    iso2: "AT",
+    isoNum: "040",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Azerbaiyán",
+    iso3: "AZE",
+    iso2: "AZ",
+    isoNum: "031",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 1"
+  },
+  {
+    country: "Bahamas",
+    iso3: "BHS",
+    iso2: "BS",
+    isoNum: "044",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Bangladesh",
+    iso3: "BGD",
+    iso2: "BD",
+    isoNum: "050",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Barbados",
+    iso3: "BRB",
+    iso2: "BB",
+    isoNum: "052",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Baréin",
+    iso3: "BHR",
+    iso2: "BH",
+    isoNum: "048",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 21"
+  },
+  {
+    country: "Belice",
+    iso3: "BLZ",
+    iso2: "BZ",
+    isoNum: "084",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Benín",
+    iso3: "BEN",
+    iso2: "BJ",
+    isoNum: "204",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 28"
+  },
+  {
+    country: "Bermudas",
+    iso3: "BMU",
+    iso2: "BM",
+    isoNum: "060",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Bielorrusia",
+    iso3: "BLR",
+    iso2: "BY",
+    isoNum: "112",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Bolivia",
+    iso3: "BOL",
+    iso2: "BO",
+    isoNum: "068",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Bosnia y Herzegovina",
+    iso3: "BIH",
+    iso2: "BA",
+    isoNum: "070",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Botswana",
+    iso3: "BWA",
+    iso2: "BW",
+    isoNum: "072",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Brasil",
+    iso3: "BRA",
+    iso2: "BR",
+    isoNum: "076",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 48"
+  },
+  {
+    country: "Brunei",
+    iso3: "BRN",
+    iso2: "BN",
+    isoNum: "096",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Bulgaria",
+    iso3: "BGR",
+    iso2: "BG",
+    isoNum: "100",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Burkina Faso",
+    iso3: "BFA",
+    iso2: "BF",
+    isoNum: "854",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Burundi",
+    iso3: "BDI",
+    iso2: "BI",
+    isoNum: "108",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Bután",
+    iso3: "BTN",
+    iso2: "BT",
+    isoNum: "064",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Bélgica",
+    iso3: "BEL",
+    iso2: "BE",
+    isoNum: "056",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Cabo Verde",
+    iso3: "CPV",
+    iso2: "CV",
+    isoNum: "132",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Camboya",
+    iso3: "KHM",
+    iso2: "KH",
+    isoNum: "116",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 10"
+  },
+  {
+    country: "Camerún",
+    iso3: "CMR",
+    iso2: "CM",
+    isoNum: "120",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Canadá",
+    iso3: "CAN",
+    iso2: "CA",
+    isoNum: "124",
+    estado: "Activo",
+    implementacion: "eTA",
+    note: "ID 3"
+  },
+  {
+    country: "Caribe Neerlandés",
+    iso3: "BES",
+    iso2: "BQ",
+    isoNum: "535",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Catar",
+    iso3: "QAT",
+    iso2: "QA",
+    isoNum: "634",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Chad",
+    iso3: "TCD",
+    iso2: "TD",
+    isoNum: "148",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Chequia",
+    iso3: "CZE",
+    iso2: "CZ",
+    isoNum: "203",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Chile",
+    iso3: "CHL",
+    iso2: "CL",
+    isoNum: "152",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "China",
+    iso3: "CHN",
+    iso2: "CN",
+    isoNum: "156",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Chipre",
+    iso3: "CYP",
+    iso2: "CY",
+    isoNum: "196",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Ciudad del Vaticano",
+    iso3: "VAT",
+    iso2: "VA",
+    isoNum: "336",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Colombia",
+    iso3: "COL",
+    iso2: "CO",
+    isoNum: "170",
+    estado: "Activo",
+    implementacion: "CheckMig",
+    note: "ID 49"
+  },
+  {
+    country: "Comoras",
+    iso3: "COM",
+    iso2: "KM",
+    isoNum: "174",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Congo-Brazzaville",
+    iso3: "COG",
+    iso2: "CG",
+    isoNum: "178",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Corea del Norte",
+    iso3: "PRK",
+    iso2: "KP",
+    isoNum: "408",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Corea del Sur",
+    iso3: "KOR",
+    iso2: "KR",
+    isoNum: "410",
+    estado: "Activo",
+    implementacion: "K-ETA",
+    note: "ID 51"
+  },
+  {
+    country: "Costa Rica",
+    iso3: "CRI",
+    iso2: "CR",
+    isoNum: "188",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Costa de Marfil",
+    iso3: "CIV",
+    iso2: "CI",
+    isoNum: "384",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 4"
+  },
+  {
+    country: "Croacia",
+    iso3: "HRV",
+    iso2: "HR",
+    isoNum: "191",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Cuba",
+    iso3: "CUB",
+    iso2: "CU",
+    isoNum: "192",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 5"
+  },
+  {
+    country: "Curazao",
+    iso3: "CUW",
+    iso2: "CW",
+    isoNum: "531",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Dinamarca",
+    iso3: "DNK",
+    iso2: "DK",
+    isoNum: "208",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Dominica",
+    iso3: "DMA",
+    iso2: "DM",
+    isoNum: "212",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Ecuador",
+    iso3: "ECU",
+    iso2: "EC",
+    isoNum: "218",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Egipto",
+    iso3: "EGY",
+    iso2: "EG",
+    isoNum: "818",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 6"
+  },
+  {
+    country: "El Salvador",
+    iso3: "SLV",
+    iso2: "SV",
+    isoNum: "222",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Emiratos Árabes Unidos",
+    iso3: "ARE",
+    iso2: "AE",
+    isoNum: "784",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 44"
+  },
+  {
+    country: "Eritrea",
+    iso3: "ERI",
+    iso2: "ER",
+    isoNum: "232",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Eslovenia",
+    iso3: "SVN",
+    iso2: "SI",
+    isoNum: "705",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "España",
+    iso3: "ESP",
+    iso2: "ES",
+    isoNum: "724",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Estados Unidos",
+    iso3: "USA",
+    iso2: "US",
+    isoNum: "840",
+    estado: "Activo",
+    implementacion: "ESTA",
+    note: "ID 17"
+  },
+  {
+    country: "Estonia",
+    iso3: "EST",
+    iso2: "EE",
+    isoNum: "233",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Etiopía",
+    iso3: "ETH",
+    iso2: "ET",
+    isoNum: "231",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 7"
+  },
+  {
+    country: "Filipinas",
+    iso3: "PHL",
+    iso2: "PH",
+    isoNum: "608",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Finlandia",
+    iso3: "FIN",
+    iso2: "FI",
+    isoNum: "246",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Fiyi",
+    iso3: "FJI",
+    iso2: "FJ",
+    isoNum: "242",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Francia",
+    iso3: "FRA",
+    iso2: "FR",
+    isoNum: "250",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Gabón",
+    iso3: "GAB",
+    iso2: "GA",
+    isoNum: "266",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Gambia",
+    iso3: "GMB",
+    iso2: "GM",
+    isoNum: "270",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Georgia",
+    iso3: "GEO",
+    iso2: "GE",
+    isoNum: "268",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 43"
+  },
+  {
+    country: "Ghana",
+    iso3: "GHA",
+    iso2: "GH",
+    isoNum: "288",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Gibraltar",
+    iso3: "GIB",
+    iso2: "GI",
+    isoNum: "292",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Grecia",
+    iso3: "GRC",
+    iso2: "GR",
+    isoNum: "300",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Grenada",
+    iso3: "GRD",
+    iso2: "GD",
+    isoNum: "308",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Groenlandia",
+    iso3: "GRL",
+    iso2: "GL",
+    isoNum: "304",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Guadalupe",
+    iso3: "GLP",
+    iso2: "GP",
+    isoNum: "312",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Guam",
+    iso3: "GUM",
+    iso2: "GU",
+    isoNum: "316",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Guatemala",
+    iso3: "GTM",
+    iso2: "GT",
+    isoNum: "320",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Guayana Francesa",
+    iso3: "GUF",
+    iso2: "GF",
+    isoNum: "254",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Guernsey",
+    iso3: "GGY",
+    iso2: "GG",
+    isoNum: "831",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Guinea",
+    iso3: "GIN",
+    iso2: "GN",
+    isoNum: "324",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 33"
+  },
+  {
+    country: "Guinea Ecuatorial",
+    iso3: "GNQ",
+    iso2: "GQ",
+    isoNum: "226",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Guinea-Bisáu",
+    iso3: "GNB",
+    iso2: "GW",
+    isoNum: "624",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Guyana",
+    iso3: "GUY",
+    iso2: "GY",
+    isoNum: "328",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Haití",
+    iso3: "HTI",
+    iso2: "HT",
+    isoNum: "332",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Honduras",
+    iso3: "HND",
+    iso2: "HN",
+    isoNum: "340",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Hong Kong",
+    iso3: "HKG",
+    iso2: "HK",
+    isoNum: "344",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Hungría",
+    iso3: "HUN",
+    iso2: "HU",
+    isoNum: "348",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "India",
+    iso3: "IND",
+    iso2: "IN",
+    isoNum: "356",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 8"
+  },
+  {
+    country: "Indonesia",
+    iso3: "IDN",
+    iso2: "ID",
+    isoNum: "360",
+    estado: "Activo",
+    implementacion: "e-VOA",
+    note: "ID 52"
+  },
+  {
+    country: "Irak",
+    iso3: "IRQ",
+    iso2: "IQ",
+    isoNum: "368",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Iran",
+    iso3: "IRN",
+    iso2: "IR",
+    isoNum: "364",
+    estado: "Inactivo",
+    implementacion: "Pre-visa",
+    note: "ID 45"
+  },
+  {
+    country: "Irlanda",
+    iso3: "IRL",
+    iso2: "IE",
+    isoNum: "372",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Isla Bouvet",
+    iso3: "BVT",
+    iso2: "BV",
+    isoNum: "074",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Isla de Man",
+    iso3: "IMN",
+    iso2: "IM",
+    isoNum: "833",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Isla de Navidad",
+    iso3: "CXR",
+    iso2: "CX",
+    isoNum: "162",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Isla de Norfolk",
+    iso3: "NFK",
+    iso2: "NF",
+    isoNum: "574",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islandia",
+    iso3: "ISL",
+    iso2: "IS",
+    isoNum: "352",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Caimán",
+    iso3: "CYM",
+    iso2: "KY",
+    isoNum: "136",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Cocos o Islas Keeling",
+    iso3: "CCK",
+    iso2: "CC",
+    isoNum: "166",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Cook",
+    iso3: "COK",
+    iso2: "CK",
+    isoNum: "184",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Faroe",
+    iso3: "FRO",
+    iso2: "FO",
+    isoNum: "234",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Georgias del Sur y Sandwich del Sur",
+    iso3: "SGS",
+    iso2: "GS",
+    isoNum: "239",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Heard y McDonald",
+    iso3: "HMD",
+    iso2: "HM",
+    isoNum: "334",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Malvinas",
+    iso3: "FLK",
+    iso2: "FK",
+    isoNum: "238",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Marianas del Norte",
+    iso3: "MNP",
+    iso2: "MP",
+    isoNum: "580",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Marshall",
+    iso3: "MHL",
+    iso2: "MH",
+    isoNum: "584",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Pitcairn",
+    iso3: "PCN",
+    iso2: "PN",
+    isoNum: "612",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Salomón",
+    iso3: "SLB",
+    iso2: "SB",
+    isoNum: "090",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Svalbard y Jan Mayen",
+    iso3: "SJM",
+    iso2: "SJ",
+    isoNum: "744",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Tokelau",
+    iso3: "TKL",
+    iso2: "TK",
+    isoNum: "772",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Turks y Caicos",
+    iso3: "TCA",
+    iso2: "TC",
+    isoNum: "796",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Ultramarinas Menores de Estados Unidos",
+    iso3: "UMI",
+    iso2: "UM",
+    isoNum: "581",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Vírgenes de los Estados Unidos",
+    iso3: "VIR",
+    iso2: "VI",
+    isoNum: "850",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Vírgenes del Reino Unido",
+    iso3: "VGB",
+    iso2: "VG",
+    isoNum: "092",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Islas Åland",
+    iso3: "ALA",
+    iso2: "AX",
+    isoNum: "248",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Israel",
+    iso3: "ISR",
+    iso2: "IL",
+    isoNum: "376",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Italia",
+    iso3: "ITA",
+    iso2: "IT",
+    isoNum: "380",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Jamaica",
+    iso3: "JAM",
+    iso2: "JM",
+    isoNum: "388",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Japón",
+    iso3: "JPN",
+    iso2: "JP",
+    isoNum: "392",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Jersey",
+    iso3: "JEY",
+    iso2: "JE",
+    isoNum: "832",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Jordania",
+    iso3: "JOR",
+    iso2: "JO",
+    isoNum: "400",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Kazajistán",
+    iso3: "KAZ",
+    iso2: "KZ",
+    isoNum: "398",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Kenia",
+    iso3: "KEN",
+    iso2: "KE",
+    isoNum: "404",
+    estado: "Activo",
+    implementacion: "eTA",
+    note: "ID 9"
+  },
+  {
+    country: "Kirguizistán",
+    iso3: "KGZ",
+    iso2: "KG",
+    isoNum: "417",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 31"
+  },
+  {
+    country: "Kiribati",
+    iso3: "KIR",
+    iso2: "KI",
+    isoNum: "296",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Kosovo",
+    iso3: "XKX",
+    iso2: "XK",
+    isoNum: "000",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Kuwait",
+    iso3: "KWT",
+    iso2: "KW",
+    isoNum: "414",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 27"
+  },
+  {
+    country: "Laos",
+    iso3: "LAO",
+    iso2: "LA",
+    isoNum: "418",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 29"
+  },
+  {
+    country: "Lesotho",
+    iso3: "LSO",
+    iso2: "LS",
+    isoNum: "426",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Letonia",
+    iso3: "LVA",
+    iso2: "LV",
+    isoNum: "428",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Liberia",
+    iso3: "LBR",
+    iso2: "LR",
+    isoNum: "430",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Libia",
+    iso3: "LBY",
+    iso2: "LY",
+    isoNum: "434",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Liechtenstein",
+    iso3: "LIE",
+    iso2: "LI",
+    isoNum: "438",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Lituania",
+    iso3: "LTU",
+    iso2: "LT",
+    isoNum: "440",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Luxemburgo",
+    iso3: "LUX",
+    iso2: "LU",
+    isoNum: "442",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Líbano",
+    iso3: "LBN",
+    iso2: "LB",
+    isoNum: "422",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Macao",
+    iso3: "MAC",
+    iso2: "MO",
+    isoNum: "446",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Macedonia del Norte",
+    iso3: "MKD",
+    iso2: "MK",
+    isoNum: "807",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Madagascar",
+    iso3: "MDG",
+    iso2: "MG",
+    isoNum: "450",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 30"
+  },
+  {
+    country: "Malasia",
+    iso3: "MYS",
+    iso2: "MY",
+    isoNum: "458",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Malawi",
+    iso3: "MWI",
+    iso2: "MW",
+    isoNum: "454",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Maldivas",
+    iso3: "MDV",
+    iso2: "MV",
+    isoNum: "462",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Mali",
+    iso3: "MLI",
+    iso2: "ML",
+    isoNum: "466",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Malta",
+    iso3: "MLT",
+    iso2: "MT",
+    isoNum: "470",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Marruecos",
+    iso3: "MAR",
+    iso2: "MA",
+    isoNum: "504",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Martinica",
+    iso3: "MTQ",
+    iso2: "MQ",
+    isoNum: "474",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Mauricio",
+    iso3: "MUS",
+    iso2: "MU",
+    isoNum: "480",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Mauritania",
+    iso3: "MRT",
+    iso2: "MR",
+    isoNum: "478",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Mayotte",
+    iso3: "MYT",
+    iso2: "YT",
+    isoNum: "175",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Micronesia",
+    iso3: "FSM",
+    iso2: "FM",
+    isoNum: "583",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Moldavia",
+    iso3: "MDA",
+    iso2: "MD",
+    isoNum: "498",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Mongolia",
+    iso3: "MNG",
+    iso2: "MN",
+    isoNum: "496",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Montenegro",
+    iso3: "MNE",
+    iso2: "ME",
+    isoNum: "499",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Montserrat",
+    iso3: "MSR",
+    iso2: "MS",
+    isoNum: "500",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 34"
+  },
+  {
+    country: "Mozambique",
+    iso3: "MOZ",
+    iso2: "MZ",
+    isoNum: "508",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Myanmar",
+    iso3: "MMR",
+    iso2: "MM",
+    isoNum: "104",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 12"
+  },
+  {
+    country: "México",
+    iso3: "MEX",
+    iso2: "MX",
+    isoNum: "484",
+    estado: "Activo",
+    implementacion: "FMM",
+    note: "ID 39"
+  },
+  {
+    country: "Mónaco",
+    iso3: "MCO",
+    iso2: "MC",
+    isoNum: "492",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Namibia",
+    iso3: "NAM",
+    iso2: "NA",
+    isoNum: "516",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Nauru",
+    iso3: "NRU",
+    iso2: "NR",
+    isoNum: "520",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Nepal",
+    iso3: "NPL",
+    iso2: "NP",
+    isoNum: "524",
+    estado: "Activo",
+    implementacion: "Pre-visa",
+    note: "ID 35"
+  },
+  {
+    country: "Nicaragua",
+    iso3: "NIC",
+    iso2: "NI",
+    isoNum: "558",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Nigeria",
+    iso3: "NGA",
+    iso2: "NG",
+    isoNum: "566",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Niue",
+    iso3: "NIU",
+    iso2: "NU",
+    isoNum: "570",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Noruega",
+    iso3: "NOR",
+    iso2: "NO",
+    isoNum: "578",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Nueva Caledonia",
+    iso3: "NCL",
+    iso2: "NC",
+    isoNum: "540",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Nueva Zelanda",
+    iso3: "NZL",
+    iso2: "NZ",
+    isoNum: "554",
+    estado: "Activo",
+    implementacion: "NZeTA",
+    note: "ID 26"
+  },
+  {
+    country: "Níger",
+    iso3: "NER",
+    iso2: "NE",
+    isoNum: "562",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Omán",
+    iso3: "OMN",
+    iso2: "OM",
+    isoNum: "512",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 13"
+  },
+  {
+    country: "Pakistán",
+    iso3: "PAK",
+    iso2: "PK",
+    isoNum: "586",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Palau",
+    iso3: "PLW",
+    iso2: "PW",
+    isoNum: "585",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Palestina",
+    iso3: "PSE",
+    iso2: "PS",
+    isoNum: "275",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Panamá",
+    iso3: "PAN",
+    iso2: "PA",
+    isoNum: "591",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Papúa Nueva Guinea",
+    iso3: "PNG",
+    iso2: "PG",
+    isoNum: "598",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 37"
+  },
+  {
+    country: "Paraguay",
+    iso3: "PRY",
+    iso2: "PY",
+    isoNum: "600",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Países Bajos",
+    iso3: "NLD",
+    iso2: "NL",
+    isoNum: "528",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Perú",
+    iso3: "PER",
+    iso2: "PE",
+    isoNum: "604",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Polinesia Francesa",
+    iso3: "PYF",
+    iso2: "PF",
+    isoNum: "258",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Polonia",
+    iso3: "POL",
+    iso2: "PL",
+    isoNum: "616",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Portugal",
+    iso3: "PRT",
+    iso2: "PT",
+    isoNum: "620",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Puerto Rico",
+    iso3: "PRI",
+    iso2: "PR",
+    isoNum: "630",
+    estado: "Activo",
+    implementacion: "ESTA",
+    note: "ID 38"
+  },
+  {
+    country: "Reino Unido",
+    iso3: "GBR",
+    iso2: "GB",
+    isoNum: "826",
+    estado: "Activo",
+    implementacion: "eTA",
+    note: "ID 53"
+  },
+  {
+    country: "República Centroafricana",
+    iso3: "CAF",
+    iso2: "CF",
+    isoNum: "140",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "República Democrática del Congo",
+    iso3: "COD",
+    iso2: "CD",
+    isoNum: "180",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "República Dominicana",
+    iso3: "DOM",
+    iso2: "DO",
+    isoNum: "214",
+    estado: "Activo",
+    implementacion: "e-Ticket",
+    note: "ID 47"
+  },
+  {
+    country: "República Eslovaca",
+    iso3: "SVK",
+    iso2: "SK",
+    isoNum: "703",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Reunión",
+    iso3: "REU",
+    iso2: "RE",
+    isoNum: "638",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Ruanda",
+    iso3: "RWA",
+    iso2: "RW",
+    isoNum: "646",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 14"
+  },
+  {
+    country: "Rumania",
+    iso3: "ROU",
+    iso2: "RO",
+    isoNum: "642",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Rusia",
+    iso3: "RUS",
+    iso2: "RU",
+    isoNum: "643",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 25"
+  },
+  {
+    country: "Sahara Occidental",
+    iso3: "ESH",
+    iso2: "EH",
+    isoNum: "732",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Saint Martin",
+    iso3: "MAF",
+    iso2: "MF",
+    isoNum: "663",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Samoa",
+    iso3: "WSM",
+    iso2: "WS",
+    isoNum: "882",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Samoa Americana",
+    iso3: "ASM",
+    iso2: "AS",
+    isoNum: "016",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "San Bartolomé",
+    iso3: "BLM",
+    iso2: "BL",
+    isoNum: "652",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "San Cristóbal y Nieves",
+    iso3: "KNA",
+    iso2: "KN",
+    isoNum: "659",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "San Marino",
+    iso3: "SMR",
+    iso2: "SM",
+    isoNum: "674",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "San Pedro y Miquelón",
+    iso3: "SPM",
+    iso2: "PM",
+    isoNum: "666",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "San Vicente y Granadinas",
+    iso3: "VCT",
+    iso2: "VC",
+    isoNum: "670",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Santa Elena, Ascensión y Tristán de Acuña",
+    iso3: "SHN",
+    iso2: "SH",
+    isoNum: "654",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Santa Lucía",
+    iso3: "LCA",
+    iso2: "LC",
+    isoNum: "662",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Santo Tomé y Príncipe",
+    iso3: "STP",
+    iso2: "ST",
+    isoNum: "678",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Senegal",
+    iso3: "SEN",
+    iso2: "SN",
+    isoNum: "686",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Serbia",
+    iso3: "SRB",
+    iso2: "RS",
+    isoNum: "688",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Seychelles",
+    iso3: "SYC",
+    iso2: "SC",
+    isoNum: "690",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Sierra Leone",
+    iso3: "SLE",
+    iso2: "SL",
+    isoNum: "694",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 50"
+  },
+  {
+    country: "Singapur",
+    iso3: "SGP",
+    iso2: "SG",
+    isoNum: "702",
+    estado: "Activo",
+    implementacion: "SG Arrival Card",
+    note: "ID 22"
+  },
+  {
+    country: "Sint Maarten",
+    iso3: "SXM",
+    iso2: "SX",
+    isoNum: "534",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Siria",
+    iso3: "SYR",
+    iso2: "SY",
+    isoNum: "760",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Somalia",
+    iso3: "SOM",
+    iso2: "SO",
+    isoNum: "706",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Sri Lanka",
+    iso3: "LKA",
+    iso2: "LK",
+    isoNum: "144",
+    estado: "Activo",
+    implementacion: "eTA",
+    note: "ID 11"
+  },
+  {
+    country: "Suazilandia",
+    iso3: "SWZ",
+    iso2: "SZ",
+    isoNum: "748",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Sudáfrica",
+    iso3: "ZAF",
+    iso2: "ZA",
+    isoNum: "710",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Sudán",
+    iso3: "SDN",
+    iso2: "SD",
+    isoNum: "729",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Sudán del Sur",
+    iso3: "SSD",
+    iso2: "SS",
+    isoNum: "728",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Suecia",
+    iso3: "SWE",
+    iso2: "SE",
+    isoNum: "752",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Suiza",
+    iso3: "CHE",
+    iso2: "CH",
+    isoNum: "756",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Surinam",
+    iso3: "SUR",
+    iso2: "SR",
+    isoNum: "740",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Tailandia",
+    iso3: "THA",
+    iso2: "TH",
+    isoNum: "764",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 46"
+  },
+  {
+    country: "Taiwán",
+    iso3: "TWN",
+    iso2: "TW",
+    isoNum: "158",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Tanzania",
+    iso3: "TZA",
+    iso2: "TZ",
+    isoNum: "834",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 42"
+  },
+  {
+    country: "Tayikistán",
+    iso3: "TJK",
+    iso2: "TJ",
+    isoNum: "762",
+    estado: "Inactivo",
+    implementacion: "eVisa",
+    note: "ID 41"
+  },
+  {
+    country: "Territorio Británico del Océano Índico",
+    iso3: "IOT",
+    iso2: "IO",
+    isoNum: "086",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Tierras Australes y Antárticas Francesas",
+    iso3: "ATF",
+    iso2: "TF",
+    isoNum: "260",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Timor Oriental",
+    iso3: "TLS",
+    iso2: "TL",
+    isoNum: "626",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Togo",
+    iso3: "TGO",
+    iso2: "TG",
+    isoNum: "768",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Tonga",
+    iso3: "TON",
+    iso2: "TO",
+    isoNum: "776",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Trinidad y Tobago",
+    iso3: "TTO",
+    iso2: "TT",
+    isoNum: "780",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Turkmenistán",
+    iso3: "TKM",
+    iso2: "TM",
+    isoNum: "795",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Turquía",
+    iso3: "TUR",
+    iso2: "TR",
+    isoNum: "792",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 15"
+  },
+  {
+    country: "Tuvalu",
+    iso3: "TUV",
+    iso2: "TV",
+    isoNum: "798",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Túnez",
+    iso3: "TUN",
+    iso2: "TN",
+    isoNum: "788",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Ucrania",
+    iso3: "UKR",
+    iso2: "UA",
+    isoNum: "804",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Uganda",
+    iso3: "UGA",
+    iso2: "UG",
+    isoNum: "800",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 16"
+  },
+  {
+    country: "Uruguay",
+    iso3: "URY",
+    iso2: "UY",
+    isoNum: "858",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Uzbekistán",
+    iso3: "UZB",
+    iso2: "UZ",
+    isoNum: "860",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Vanuatu",
+    iso3: "VUT",
+    iso2: "VU",
+    isoNum: "548",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Venezuela",
+    iso3: "VEN",
+    iso2: "VE",
+    isoNum: "862",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Vietnam",
+    iso3: "VNM",
+    iso2: "VN",
+    isoNum: "704",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 18"
+  },
+  {
+    country: "Wallis y Futuna",
+    iso3: "WLF",
+    iso2: "WF",
+    isoNum: "876",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Yemen",
+    iso3: "YEM",
+    iso2: "YE",
+    isoNum: "887",
+    estado: "No implementado",
+    implementacion: "",
+    note: ""
+  },
+  {
+    country: "Yibuti",
+    iso3: "DJI",
+    iso2: "DJ",
+    isoNum: "262",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 19"
+  },
+  {
+    country: "Zambia",
+    iso3: "ZMB",
+    iso2: "ZM",
+    isoNum: "894",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 23"
+  },
+  {
+    country: "Zimbabue",
+    iso3: "ZWE",
+    iso2: "ZW",
+    isoNum: "716",
+    estado: "Activo",
+    implementacion: "eVisa",
+    note: "ID 24"
+  }
+];
+
+
+    // Productos: país + ISO3 + estado (Activo/Inactivo) + nombre + fechas + nota
+    // Estado 从你原始文本里「Producto activo / Producto inactivo」来，
+    // 我这里已经直接写成 "Activo"/"Inactivo" 方便筛选。
+const products = [
+  // Angola
+  {
+    country: "Angola",
+    estado: "Activo",
+    producto: "ago_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Emiratos Árabes Unidos
+  {
+    country: "Emiratos Árabes Unidos",
+    estado: "Activo",
+    producto: "are_tourist_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Emiratos Árabes Unidos",
+    estado: "Inactivo",
+    producto: "are_transit_2_days",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Emiratos Árabes Unidos",
+    estado: "Inactivo",
+    producto: "are_transit_4_days",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Armenia
+  {
+    country: "Armenia",
+    estado: "Activo",
+    producto: "arm_visitor-120",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Armenia",
+    estado: "Activo",
+    producto: "arm_visitor-21",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Antigua y Barbuda
+  {
+    country: "Antigua y Barbuda",
+    estado: "Inactivo",
+    producto: "atg_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Antigua y Barbuda",
+    estado: "Inactivo",
+    producto: "atg_transit-urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Antigua y Barbuda",
+    estado: "Activo",
+    producto: "atg_visitor_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Australia
+  {
+    country: "Australia",
+    estado: "Activo",
+    producto: "aus_simple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Australia",
+    estado: "Inactivo",
+    producto: "aus_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Azerbaiyán
+  {
+    country: "Azerbaiyán",
+    estado: "Activo",
+    producto: "aze_simple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Azerbaiyán",
+    estado: "Activo",
+    producto: "aze_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Benín
+  {
+    country: "Benín",
+    estado: "Activo",
+    producto: "ben_multiple_entries_30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Benín",
+    estado: "Activo",
+    producto: "ben_multiple_entries_90",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Benín",
+    estado: "Activo",
+    producto: "ben_single_entry_30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Baréin
+  {
+    country: "Baréin",
+    estado: "Inactivo",
+    producto: "bhr_formula_1",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Baréin",
+    estado: "Activo",
+    producto: "bhr_multiple_month",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Baréin",
+    estado: "Activo",
+    producto: "bhr_single_entry",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Brasil
+  {
+    country: "Brasil",
+    estado: "Activo",
+    producto: "bra_evisa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Canadá
+  {
+    country: "Canadá",
+    estado: "Activo",
+    producto: "can_simple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Canadá",
+    estado: "Inactivo",
+    producto: "can_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Costa de Marfil
+  {
+    country: "Costa de Marfil",
+    estado: "Activo",
+    producto: "civ_simple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Colombia
+  {
+    country: "Colombia",
+    estado: "Activo",
+    producto: "col_checkmig",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Cuba
+  {
+    country: "Cuba",
+    estado: "Activo",
+    producto: "cub_evisa_except_usa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Cuba",
+    estado: "Inactivo",
+    producto: "cub_evisa_usa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Cuba",
+    estado: "Inactivo",
+    producto: "cub_from_us",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Cuba",
+    estado: "Inactivo",
+    producto: "cub_from_worldwide",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Yibuti
+  {
+    country: "Yibuti",
+    estado: "Activo",
+    producto: "dji_short_stay",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Yibuti",
+    estado: "Activo",
+    producto: "dji_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // República Dominicana
+  {
+    country: "República Dominicana",
+    estado: "Activo",
+    producto: "dom_eticket",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "República Dominicana",
+    estado: "Activo",
+    producto: "dom_eticket_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Egipto
+  {
+    country: "Egipto",
+    estado: "Activo",
+    producto: "egy_multiple_entry",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Egipto",
+    estado: "Activo",
+    producto: "egy_multiple_entry_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Egipto",
+    estado: "Activo",
+    producto: "egy_single_entry",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Egipto",
+    estado: "Activo",
+    producto: "egy_single_entry_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Etiopía
+  {
+    country: "Etiopía",
+    estado: "Activo",
+    producto: "eth_single_entry_30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Etiopía",
+    estado: "Inactivo",
+    producto: "eth_single_entry_90",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Reino Unido
+  {
+    country: "Reino Unido",
+    estado: "Activo",
+    producto: "gbr_eta",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Reino Unido",
+    estado: "Inactivo",
+    producto: "gbr_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Georgia
+  {
+    country: "Georgia",
+    estado: "Activo",
+    producto: "geo_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Guinea
+  {
+    country: "Guinea",
+    estado: "Activo",
+    producto: "gin_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Guinea",
+    estado: "Activo",
+    producto: "gin_transborderment",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Guinea",
+    estado: "Activo",
+    producto: "gin_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Indonesia
+  {
+    country: "Indonesia",
+    estado: "Activo",
+    producto: "idn_evoa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Indonesia",
+    estado: "Inactivo",
+    producto: "idn_evoa_bali",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Indonesia",
+    estado: "Inactivo",
+    producto: "idn_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // India
+  {
+    country: "India",
+    estado: "Activo",
+    producto: "ind_business",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "India",
+    estado: "Activo",
+    producto: "ind_conference",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "India",
+    estado: "Activo",
+    producto: "ind_medical",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "India",
+    estado: "Activo",
+    producto: "ind_medical_attendant",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "India",
+    estado: "Activo",
+    producto: "ind_tourist-1",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "India",
+    estado: "Activo",
+    producto: "ind_tourist-30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "India",
+    estado: "Activo",
+    producto: "ind_tourist-5",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Iran
+  {
+    country: "Iran",
+    estado: "Activo",
+    producto: "irn_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Iran",
+    estado: "Activo",
+    producto: "irn_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Kenia
+  {
+    country: "Kenia",
+    estado: "Inactivo",
+    producto: "ken_east_africa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Kenia",
+    estado: "Inactivo",
+    producto: "ken_east_africa_old",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Kenia",
+    estado: "Inactivo",
+    producto: "ken_multiple_entry",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Kenia",
+    estado: "Activo",
+    producto: "ken_simple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Kenia",
+    estado: "Inactivo",
+    producto: "ken_single_entry",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Kenia",
+    estado: "Inactivo",
+    producto: "ken_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Kirguizistán
+  {
+    country: "Kirguizistán",
+    estado: "Activo",
+    producto: "kgz_tourist-30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Kirguizistán",
+    estado: "Activo",
+    producto: "kgz_tourist-60",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Kirguizistán",
+    estado: "Activo",
+    producto: "kgz_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Camboya
+  {
+    country: "Camboya",
+    estado: "Activo",
+    producto: "khm_tourism",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Corea del Sur
+  {
+    country: "Corea del Sur",
+    estado: "Inactivo",
+    producto: "kor_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Corea del Sur",
+    estado: "Activo",
+    producto: "korea_eta",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Kuwait
+  {
+    country: "Kuwait",
+    estado: "Activo",
+    producto: "kwt_tourist_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Laos
+  {
+    country: "Laos",
+    estado: "Activo",
+    producto: "lao_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Sri Lanka
+  {
+    country: "Sri Lanka",
+    estado: "Activo",
+    producto: "lka_business",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Sri Lanka",
+    estado: "Inactivo",
+    producto: "lka_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Sri Lanka",
+    estado: "Inactivo",
+    producto: "lka_tourist_3_months",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Sri Lanka",
+    estado: "Inactivo",
+    producto: "lka_tourist_30_days",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: "1 pais(es) elegible(s) falta(n) por añadir a la segmentación de precios"
+  },
+  {
+    country: "Sri Lanka",
+    estado: "Inactivo",
+    producto: "lka_tourist_60_days",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Sri Lanka",
+    estado: "Activo",
+    producto: "lka_tourist_eta",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Sri Lanka",
+    estado: "Activo",
+    producto: "lka_tourist_eta_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Sri Lanka",
+    estado: "Activo",
+    producto: "lka_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Sri Lanka",
+    estado: "Inactivo",
+    producto: "tourist_6_month",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Madagascar
+  {
+    country: "Madagascar",
+    estado: "Activo",
+    producto: "mdg_tourist-15",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Madagascar",
+    estado: "Activo",
+    producto: "mdg_tourist-30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Madagascar",
+    estado: "Activo",
+    producto: "mdg_tourist-60",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // México
+  {
+    country: "México",
+    estado: "Activo",
+    producto: "mex_tourist_180_land",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Myanmar
+  {
+    country: "Myanmar",
+    estado: "Activo",
+    producto: "mmr_business",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Myanmar",
+    estado: "Activo",
+    producto: "mmr_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Montserrat
+  {
+    country: "Montserrat",
+    estado: "Activo",
+    producto: "msr_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Nepal
+  {
+    country: "Nepal",
+    estado: "Activo",
+    producto: "npl_tourist-15",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Nepal",
+    estado: "Activo",
+    producto: "npl_tourist-30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Nepal",
+    estado: "Activo",
+    producto: "npl_tourist-90",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Nueva Zelanda
+  {
+    country: "Nueva Zelanda",
+    estado: "Activo",
+    producto: "nzl_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Nueva Zelanda",
+    estado: "Inactivo",
+    producto: "nzl_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Nueva Zelanda",
+    estado: "Inactivo",
+    producto: "nzl_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Omán
+  {
+    country: "Omán",
+    estado: "Activo",
+    producto: "omn_multiple_1_year",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Omán",
+    estado: "Activo",
+    producto: "omn_simple_30_days",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Papúa Nueva Guinea
+  {
+    country: "Papúa Nueva Guinea",
+    estado: "Activo",
+    producto: "png_easy-visitor-30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Papúa Nueva Guinea",
+    estado: "Activo",
+    producto: "png_easy-visitor-60",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Puerto Rico
+  {
+    country: "Puerto Rico",
+    estado: "Activo",
+    producto: "pri_simple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Puerto Rico",
+    estado: "Activo",
+    producto: "pri_simple_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Puerto Rico",
+    estado: "Inactivo",
+    producto: "pri_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Puerto Rico",
+    estado: "Inactivo",
+    producto: "pri_transit_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Rusia
+  {
+    country: "Rusia",
+    estado: "Activo",
+    producto: "rus_far_eastern",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Rusia",
+    estado: "Activo",
+    producto: "rus_kaliningrad",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Rusia",
+    estado: "Activo",
+    producto: "rus_saint_petersburg",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Ruanda
+  {
+    country: "Ruanda",
+    estado: "Activo",
+    producto: "rwa_east_africa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Ruanda",
+    estado: "Activo",
+    producto: "rwa_family_30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Ruanda",
+    estado: "Activo",
+    producto: "rwa_holiday_30",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Ruanda",
+    estado: "Activo",
+    producto: "rwa_multi",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Ruanda",
+    estado: "Activo",
+    producto: "rwa_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Arabia Saudí
+  {
+    country: "Arabia Saudí",
+    estado: "Activo",
+    producto: "sau_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Arabia Saudí",
+    estado: "Activo",
+    producto: "sau_tourist_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Arabia Saudí",
+    estado: "Activo",
+    producto: "sau_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Singapur
+  {
+    country: "Singapur",
+    estado: "Activo",
+    producto: "sgp_electronic_arrival_card",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Sierra Leone
+  {
+    country: "Sierra Leone",
+    estado: "Activo",
+    producto: "sle_multiple_entry_evisa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Sierra Leone",
+    estado: "Activo",
+    producto: "sle_single_entry_evisa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Tailandia
+  {
+    country: "Tailandia",
+    estado: "Activo",
+    producto: "tha_business_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tailandia",
+    estado: "Activo",
+    producto: "tha_business_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tailandia",
+    estado: "Activo",
+    producto: "tha_tourist_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tailandia",
+    estado: "Activo",
+    producto: "tha_tourist_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tailandia",
+    estado: "Activo",
+    producto: "tha_transit_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tailandia",
+    estado: "Inactivo",
+    producto: "tha_volunteer",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Tayikistán
+  {
+    country: "Tayikistán",
+    estado: "Activo",
+    producto: "tjk_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tayikistán",
+    estado: "Activo",
+    producto: "tjk_multiple-gbao",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tayikistán",
+    estado: "Activo",
+    producto: "tjk_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tayikistán",
+    estado: "Activo",
+    producto: "tjk_single-gbao",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Turquía
+  {
+    country: "Turquía",
+    estado: "Activo",
+    producto: "tur_tourist",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Turquía",
+    estado: "Activo",
+    producto: "tur_tourist_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Tanzania
+  {
+    country: "Tanzania",
+    estado: "Activo",
+    producto: "tza_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tanzania",
+    estado: "Activo",
+    producto: "tza_ordinary",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Tanzania",
+    estado: "Inactivo",
+    producto: "tza_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Uganda
+  {
+    country: "Uganda",
+    estado: "Activo",
+    producto: "uga_east-african",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Uganda",
+    estado: "Activo",
+    producto: "uga_multiple-1",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Uganda",
+    estado: "Activo",
+    producto: "uga_multiple-12",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Uganda",
+    estado: "Activo",
+    producto: "uga_tourism",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Uganda",
+    estado: "Activo",
+    producto: "uga_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Estados Unidos
+  {
+    country: "Estados Unidos",
+    estado: "Activo",
+    producto: "usa_b1_b2_visitor_visa",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Estados Unidos",
+    estado: "Activo",
+    producto: "usa_simple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Estados Unidos",
+    estado: "Activo",
+    producto: "usa_simple_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Estados Unidos",
+    estado: "Inactivo",
+    producto: "usa_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Estados Unidos",
+    estado: "Inactivo",
+    producto: "usa_transit_urgent",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Vietnam
+  {
+    country: "Vietnam",
+    estado: "Activo",
+    producto: "vnm_evisa_multi",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Vietnam",
+    estado: "Activo",
+    producto: "vnm_evisa_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Vietnam",
+    estado: "Inactivo",
+    producto: "vnm_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Vietnam",
+    estado: "Inactivo",
+    producto: "vnm_simple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Zambia
+  {
+    country: "Zambia",
+    estado: "Inactivo",
+    producto: "zmb_business_double",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zambia",
+    estado: "Inactivo",
+    producto: "zmb_business_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zambia",
+    estado: "Inactivo",
+    producto: "zmb_business_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zambia",
+    estado: "Activo",
+    producto: "zmb_kaza",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zambia",
+    estado: "Activo",
+    producto: "zmb_tourist_double",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zambia",
+    estado: "Activo",
+    producto: "zmb_tourist_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zambia",
+    estado: "Activo",
+    producto: "zmb_tourist_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zambia",
+    estado: "Activo",
+    producto: "zmb_transit",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+
+  // Zimbabue
+  {
+    country: "Zimbabue",
+    estado: "Activo",
+    producto: "zwe_double",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zimbabue",
+    estado: "Activo",
+    producto: "zwe_kaza",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zimbabue",
+    estado: "Activo",
+    producto: "zwe_multiple",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zimbabue",
+    estado: "Activo",
+    producto: "zwe_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: ""
+  },
+  {
+    country: "Zimbabue",
+    estado: "Inactivo",
+    producto: "zwe_tourist_double",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: "1 pais(es) elegible(s) falta(n) por añadir a la segmentación de precios"
+  },
+  {
+    country: "Zimbabue",
+    estado: "Inactivo",
+    producto: "zwe_tourist_kaza",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: "1 pais(es) elegible(s) falta(n) por añadir a la segmentación de precios"
+  },
+  {
+    country: "Zimbabue",
+    estado: "Inactivo",
+    producto: "zwe_tourist_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: "1 pais(es) elegible(s) falta(n) por añadir a la segmentación de precios"
+  },
+  {
+    country: "Zimbabue",
+    estado: "Inactivo",
+    producto: "zwe_transit_double",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: "1 pais(es) elegible(s) falta(n) por añadir a la segmentación de precios"
+  },
+  {
+    country: "Zimbabue",
+    estado: "Inactivo",
+    producto: "zwe_transit_single",
+    actualizacionCompleto: "",
+    actualizacionRegla: "",
+    note: "1 pais(es) elegible(s) falta(n) por añadir a la segmentación de precios"
+  }
+];
+
+
+// Métricas extra por país (para prioridad)
+// Se rellena manualmente o por importación CSV/XLSX.
+// Campos soportados:
+// - iso3 (recomendado) o country
+// - clientes365 (C1)
+// - complejidadScore (0..1) o preguntas/docs/combinaciones (para calcular complejidad)
+// - deltaCVR (opcional)
+const metrics = [
+  // Ejemplo:
+  // { iso3:"IND", country:"India", clientes365: 1234, preguntas: 80, docs: 18, combinaciones: 45, deltaCVR: -0.03, note:"" }
+];
+
+
+// Estado de ordenación de la tabla de Productos
+let productosSortField = null;      // "comp" o "reg"
+let productosSortDirection = "desc"; // "asc" o "desc"
+
+
+
+
+    // =======================
+    // 2) UTILIDADES
+    // =======================
+    function formatCountryCell(item) {
+      let code = item.iso3 || "";
+
+      // Si en este objeto no viene ISO3 (por ejemplo en productos),
+      // intentamos buscarlo en la lista de países por nombre.
+      if (!code && Array.isArray(countries) && item.country) {
+        const found = countries.find(c => c.country === item.country);
+        if (found && found.iso3) {
+          code = found.iso3;
+        }
+      }
+
+      return `
+        <div class="country-name">${item.country}</div>
+        <div class="country-code">${code || ""}</div>
+      `;
+    }
+
+    function renderEstadoBadge(estado) {
+      if (!estado) return "";
+      const key = estado.toLowerCase();
+      let cls = "no-implementado";
+      if (key === "activo") cls = "activo";
+      else if (key === "inactivo") cls = "inactivo";
+      else if (key.startsWith("no implementado")) cls = "no-implementado";
+      return `<span class="badge ${cls}">${estado}</span>`;
+    }
+
+    function parseDate(value) {
+      if (!value) return null;
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return null;
+      return d;
+    }
+
+    function formatDateForDisplay(value) {
+      if (!value) return "";
+      const d = parseDate(value);
+      if (!d) return value;
+      const day = String(d.getDate()).padStart(2, "0");
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    }
+
+    function formatDateForCSV(value) {
+      return formatDateForDisplay(value);
+    }
+
+    function exportCSV(filename, rows) {
+      const lines = rows.map(row =>
+        row
+          .map(v => {
+            const value = (v ?? "").toString().replace(/"/g, '""');
+            return `"${value}"`;
+          })
+          .join(",")
+      );
+      const csvContent = lines.join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // =======================
+    // 2b) ALMACENAMIENTO LOCAL
+    // =======================
+    const STORAGE_VERSION = "v1";
+    const COUNTRIES_KEY = "panel_countries_" + STORAGE_VERSION;
+    const PRODUCTS_KEY = "panel_productos_" + STORAGE_VERSION;
+    const METRICS_KEY = "panel_metricas_" + STORAGE_VERSION;
+
+    function saveDataToStorage() {
+      try {
+        if (!window.localStorage) return;
+        localStorage.setItem(COUNTRIES_KEY, JSON.stringify(countries));
+        localStorage.setItem(PRODUCTS_KEY, JSON.stringify(products));
+        localStorage.setItem(METRICS_KEY, JSON.stringify(metrics));
+      } catch (e) {
+        console.warn("No se pudo guardar en localStorage", e);
+      }
+    }
+
+    function loadArrayInto(targetArray, raw) {
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          targetArray.length = 0;
+          parsed.forEach(item => targetArray.push(item));
+        }
+      } catch (e) {
+        console.warn("No se pudo parsear datos guardados", e);
+      }
+    }
+
+    function loadDataFromStorage() {
+      try {
+        if (!window.localStorage) return;
+        loadArrayInto(countries, localStorage.getItem(COUNTRIES_KEY));
+        loadArrayInto(products, localStorage.getItem(PRODUCTS_KEY));
+        loadArrayInto(metrics, localStorage.getItem(METRICS_KEY));
+      } catch (e) {
+        console.warn("No se pudo cargar desde localStorage", e);
+      }
+    }
+
+    // =======================
+    // 3) RENDER TABLAS
+    // =======================
+    function getCountriesFiltered() {
+      const filtroEstado = document.getElementById("paises-estado-filter").value;
+      return countries.filter(c => {
+        if (!filtroEstado) return true;
+        return (c.estado || "").toLowerCase() === filtroEstado.toLowerCase();
+      });
+    }
+
+    function renderPaisesTable() {
+      const tbody = document.getElementById("paises-tbody");
+      tbody.innerHTML = "";
+      const data = getCountriesFiltered();
+
+      data.forEach((c, i) => {
+        const idx = countries.indexOf(c);
+        const tr = document.createElement("tr");
+        tr.dataset.index = idx;
+
+        // Fondo alterno por fila (1ª blanca, 2ª gris, etc.)
+        const bgClass = (i % 2 === 0) ? "row-bg-light" : "row-bg-alt";
+        tr.classList.add(bgClass);
+
+        tr.innerHTML = `
+          <td>${formatCountryCell(c)}</td>
+          <td>${renderEstadoBadge(c.estado)}</td>
+          <td>${c.implementacion || ""}</td>
+          <td>${c.note || ""}</td>
+          <td><button type="button" class="btn small">Editar</button></td>
+        `;
+        tr.querySelector("button").addEventListener("click", () => openCountryEditor(idx));
+        tbody.appendChild(tr);
+      });
+    }
+
+
+    function getProductsFiltered() {
+      const estadoValue = document.getElementById("productos-estado-filter").value;
+      const cf = document.getElementById("productos-comp-from").value;
+      const ct = document.getElementById("productos-comp-to").value;
+      const rf = document.getElementById("productos-reg-from").value;
+      const rt = document.getElementById("productos-reg-to").value;
+
+      const filtered = products.filter(p => {
+        if (estadoValue) {
+          if ((p.estado || "").toLowerCase() !== estadoValue.toLowerCase()) return false;
+        }
+        if (cf && (!p.actualizacionCompleto || p.actualizacionCompleto < cf)) return false;
+        if (ct && (!p.actualizacionCompleto || p.actualizacionCompleto > ct)) return false;
+        if (rf && (!p.actualizacionRegla || p.actualizacionRegla < rf)) return false;
+        if (rt && (!p.actualizacionRegla || p.actualizacionRegla > rt)) return false;
+        return true;
+      });
+
+      // Si no se ha elegido ningún orden, solo se aplica el filtro
+      if (!productosSortField) {
+        return filtered;
+      }
+
+      const fieldName =
+        productosSortField === "comp" ? "actualizacionCompleto" : "actualizacionRegla";
+      const dir = productosSortDirection === "asc" ? 1 : -1;
+
+      return filtered.slice().sort((a, b) => {
+        const va = a[fieldName] || "";
+        const vb = b[fieldName] || "";
+        const da = parseDate(va);
+        const db = parseDate(vb);
+        const na = da ? da.getTime() : 0;
+        const nb = db ? db.getTime() : 0;
+
+        if (na === nb) return 0;
+        return na < nb ? -1 * dir : 1 * dir;
+      });
+    }
+
+    function renderProductosTable() {
+      const tbody = document.getElementById("productos-tbody");
+      tbody.innerHTML = "";
+      const data = getProductsFiltered();
+
+      // Asignar color por país, en el orden de primera aparición
+      const countryColorMap = new Map();
+      let nextBgClass = "row-bg-light";
+
+      data.forEach(p => {
+        const idx = products.indexOf(p);
+        const tr = document.createElement("tr");
+        tr.dataset.index = idx;
+
+        // Si el país ya tiene color, lo reutilizamos.
+        // Si es un país nuevo en esta vista, alternamos entre blanco y gris.
+        const countryName = p.country || "";
+        let bgClass;
+        if (countryColorMap.has(countryName)) {
+          bgClass = countryColorMap.get(countryName);
+        } else {
+          bgClass = nextBgClass;
+          countryColorMap.set(countryName, bgClass);
+          nextBgClass = nextBgClass === "row-bg-light" ? "row-bg-alt" : "row-bg-light";
+        }
+        tr.classList.add(bgClass);
+
+        tr.innerHTML = `
+          <td>${formatCountryCell(p)}</td>
+          <td>${renderEstadoBadge(p.estado)}</td>
+          <td>${p.producto || ""}</td>
+          <td>${formatDateForDisplay(p.actualizacionCompleto)}</td>
+          <td>${formatDateForDisplay(p.actualizacionRegla)}</td>
+          <td>${p.note || ""}</td>
+          <td><button type="button" class="btn small">Editar</button></td>
+        `;
+        tr.querySelector("button").addEventListener("click", () => openProductoEditor(idx));
+        tbody.appendChild(tr);
+      });
+
+    }
+
+    // =======================
+    // 4) MODAL EDICIÓN
+    // =======================
+    const modalBackdrop = document.getElementById("modal-backdrop");
+    const modalTitle = document.getElementById("modal-title");
+    const modalContent = document.getElementById("modal-content");
+    const modalForm = document.getElementById("modal-form");
+    const modalCancel = document.getElementById("modal-cancel");
+    let modalState = null;
+
+    function openModal() { modalBackdrop.classList.remove("hidden"); }
+    function closeModal() { modalBackdrop.classList.add("hidden"); modalState = null; }
+
+    function openCountryEditor(idx) {
+      const c = countries[idx];
+      modalState = { type: "country", index: idx };
+      modalTitle.textContent = `Editar país – ${c.country}`;
+      modalContent.innerHTML = `
+        <div class="modal-field">
+          <label>Estado</label>
+          <select name="estado">
+            <option value="">(sin estado)</option>
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+            <option value="No implementado">No implementado</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Implementación</label>
+          <input name="implementacion" type="text">
+        </div>
+        <div class="modal-field">
+          <label>Nota</label>
+          <textarea name="nota"></textarea>
+        </div>
+      `;
+      modalForm.estado.value = c.estado || "";
+      modalForm.implementacion.value = c.implementacion || "";
+      modalForm.nota.value = c.note || "";
+      openModal();
+    }
+
+    function openProductoEditor(idx) {
+      const p = products[idx];
+      modalState = { type: "product", index: idx };
+      modalTitle.textContent = `Editar producto – ${p.producto} (${p.country})`;
+      modalContent.innerHTML = `
+        <div class="modal-field">
+          <label>Estado</label>
+          <select name="estado">
+            <option value="">(sin estado)</option>
+            <option value="Activo">Activo</option>
+            <option value="Inactivo">Inactivo</option>
+          </select>
+        </div>
+        <div class="modal-field">
+          <label>Producto (código interno)</label>
+          <input name="producto" type="text">
+        </div>
+        <div class="modal-field">
+          <label>Actualización Completo</label>
+          <input name="comp" type="date">
+        </div>
+        <div class="modal-field">
+          <label>Actualización regla</label>
+          <input name="regla" type="date">
+        </div>
+        <div class="modal-field">
+          <label>Nota</label>
+          <textarea name="nota"></textarea>
+        </div>
+      `;
+      modalForm.estado.value = p.estado || "";
+      modalForm.producto.value = p.producto || "";
+      modalForm.comp.value = p.actualizacionCompleto || "";
+      modalForm.regla.value = p.actualizacionRegla || "";
+      modalForm.nota.value = p.note || "";
+      openModal();
+    }
+
+    modalCancel.addEventListener("click", () => closeModal());
+
+    modalForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!modalState) return;
+      const f = modalForm;
+      if (modalState.type === "country") {
+        const c = countries[modalState.index];
+        c.estado = f.estado.value;
+        c.implementacion = f.implementacion.value.trim();
+        c.note = f.nota.value.trim();
+        renderPaisesTable();
+      } else if (modalState.type === "product") {
+        const p = products[modalState.index];
+        p.estado = f.estado.value;
+        p.producto = f.producto.value.trim();
+        p.actualizacionCompleto = f.comp.value;   // 存 yyyy-mm-dd
+        p.actualizacionRegla = f.regla.value;
+        p.note = f.nota.value.trim();
+        renderProductosTable();
+      }
+      renderResumen();
+      saveDataToStorage();
+      closeModal();
+    });
+
+    // =======================
+    // 5) EXPORTAR CSV
+    // =======================
+    function exportPaisesCsv() {
+      const data = getCountriesFiltered();
+      const rows = [["País", "ISO3", "Estado", "Implementación", "Nota"]];
+      data.forEach(c => {
+        rows.push([
+          c.country,
+          c.iso3 || "",
+          c.estado || "",
+          c.implementacion || "",
+          c.note || ""
+        ]);
+      });
+      exportCSV("paises.csv", rows);
+    }
+
+    function exportProductosCsv() {
+      const data = getProductsFiltered();
+      const rows = [["País", "ISO3", "Estado", "Producto", "Actualización Completo", "Actualización regla", "Nota"]];
+      data.forEach(p => {
+        rows.push([
+          p.country,
+          p.iso3 || "",
+          p.estado || "",
+          p.producto || "",
+          formatDateForCSV(p.actualizacionCompleto),
+          formatDateForCSV(p.actualizacionRegla),
+          p.note || ""
+        ]);
+      });
+      exportCSV("productos.csv", rows);
+    }
+
+    // =======================
+    // 6) RESUMEN
+    // =======================
+    function renderResumenPaises() {
+      const counts = { "Activo": 0, "Inactivo": 0, "No implementado": 0 };
+      countries.forEach(c => {
+        if (c.estado && counts.hasOwnProperty(c.estado)) counts[c.estado]++;
+      });
+      const subtitle = document.getElementById("res-paises-count");
+      subtitle.textContent =
+        `Activo: ${counts["Activo"]} · Inactivo: ${counts["Inactivo"]} · No implementado: ${counts["No implementado"]}`;
+
+      const body = document.getElementById("res-paises-body");
+      const rows = countries
+        .map(c => `
+          <tr>
+            <td>${formatCountryCell(c)}</td>
+            <td>${renderEstadoBadge(c.estado)}</td>
+            <td>${c.implementacion || ""}</td>
+          </tr>
+        `)
+        .join("");
+      body.innerHTML = `
+        <div style="max-height:320px; overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>País</th>
+                <th>Estado</th>
+                <th>Implementación</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderResumenProductos() {
+      const counts = { "Activo": 0, "Inactivo": 0 };
+      products.forEach(p => {
+        if (p.estado && counts.hasOwnProperty(p.estado)) counts[p.estado]++;
+      });
+      const subtitle = document.getElementById("res-productos-count");
+      subtitle.textContent =
+        `Activo: ${counts["Activo"]} · Inactivo: ${counts["Inactivo"]}`;
+
+      const body = document.getElementById("res-productos-body");
+      const rows = products
+        .map(p => `
+          <tr>
+            <td>${formatCountryCell(p)}</td>
+            <td>${renderEstadoBadge(p.estado)}</td>
+            <td>${p.producto || ""}</td>
+          </tr>
+        `)
+        .join("");
+      body.innerHTML = `
+        <div style="max-height:320px; overflow:auto;">
+          <table>
+            <thead>
+              <tr>
+                <th>País</th>
+                <th>Estado</th>
+                <th>Producto</th>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    function renderResumenUltimasActualizaciones() {
+      let latestCompDate = null;
+      let latestComp = null;
+      let latestRegDate = null;
+      let latestReg = null;
+
+      products.forEach(p => {
+        const dComp = parseDate(p.actualizacionCompleto);
+        if (dComp && (!latestCompDate || dComp > latestCompDate)) {
+          latestCompDate = dComp;
+          latestComp = p;
+        }
+        const dReg = parseDate(p.actualizacionRegla);
+        if (dReg && (!latestRegDate || dReg > latestRegDate)) {
+          latestRegDate = dReg;
+          latestReg = p;
+        }
+      });
+
+      const subtitleComp = document.getElementById("res-ult-comp-count");
+      const bodyComp = document.getElementById("res-ult-comp-body");
+      if (!latestComp) {
+        subtitleComp.textContent = "Sin datos aún";
+        bodyComp.innerHTML = "<p>Todavía no hay fechas en \"Actualización Completo\".</p>";
+      } else {
+        subtitleComp.textContent =
+          `${formatDateForDisplay(latestComp.actualizacionCompleto)} – ${latestComp.country}, ${latestComp.producto}`;
+        bodyComp.innerHTML = `
+          <p>Última actualización completa:</p>
+          <ul>
+            <li><strong>País:</strong> ${latestComp.country}</li>
+            <li><strong>Producto:</strong> ${latestComp.producto}</li>
+            <li><strong>Fecha:</strong> ${formatDateForDisplay(latestComp.actualizacionCompleto)}</li>
+          </ul>
+        `;
+      }
+
+      const subtitleReg = document.getElementById("res-ult-reg-count");
+      const bodyReg = document.getElementById("res-ult-reg-body");
+      if (!latestReg) {
+        subtitleReg.textContent = "Sin datos aún";
+        bodyReg.innerHTML = "<p>Todavía no hay fechas en \"Actualización regla\".</p>";
+      } else {
+        subtitleReg.textContent =
+          `${formatDateForDisplay(latestReg.actualizacionRegla)} – ${latestReg.country}, ${latestReg.producto}`;
+        bodyReg.innerHTML = `
+          <p>Última actualización de regla:</p>
+          <ul>
+            <li><strong>País:</strong> ${latestReg.country}</li>
+            <li><strong>Producto:</strong> ${latestReg.producto}</li>
+            <li><strong>Fecha:</strong> ${formatDateForDisplay(latestReg.actualizacionRegla)}</li>
+          </ul>
+        `;
+      }
+    }
+
+    function renderResumenPendientes() {
+      const now = new Date();
+      const sixMonthsAgo = new Date(now.getTime());
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+
+      const olderThanSixMonths = (value) => {
+        const d = parseDate(value);
+        if (!d) return false;
+        return d < sixMonthsAgo;
+      };
+
+      const listComp = products.filter(p => olderThanSixMonths(p.actualizacionCompleto));
+      const bodyComp = document.getElementById("res-pend-comp-body");
+      if (!listComp.length) {
+        bodyComp.innerHTML = "<p>No hay productos con \"Actualización Completo\" &gt; 6 meses.</p>";
+      } else {
+        const rows = listComp
+          .map(p => `
+            <tr>
+              <td>${formatCountryCell(p)}</td>
+              <td>${p.producto || ""}</td>
+              <td>${formatDateForDisplay(p.actualizacionCompleto)}</td>
+            </tr>
+          `)
+          .join("");
+        bodyComp.innerHTML = `
+          <div style="max-height:320px; overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>País</th>
+                  <th>Producto</th>
+                  <th>Actualización Completo</th>
+                </tr>
+              </thead>
+              <tbody>${rows}</tbody>
+            </table>
+          </div>
+        `;
+      }
+
+      const listBoth = products.filter(
+        p => olderThanSixMonths(p.actualizacionCompleto) && olderThanSixMonths(p.actualizacionRegla)
+      );
+      const bodyBoth = document.getElementById("res-pend-both-body");
+      if (!listBoth.length) {
+        bodyBoth.innerHTML = "<p>No hay productos con ambas fechas &gt; 6 meses.</p>";
+      } else {
+        const rows2 = listBoth
+          .map(p => `
+            <tr>
+              <td>${formatCountryCell(p)}</td>
+              <td>${p.producto || ""}</td>
+              <td>${formatDateForDisplay(p.actualizacionCompleto)}</td>
+              <td>${formatDateForDisplay(p.actualizacionRegla)}</td>
+            </tr>
+          `)
+          .join("");
+        bodyBoth.innerHTML = `
+          <div style="max-height:320px; overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>País</th>
+                  <th>Producto</th>
+                  <th>Actualización Completo</th>
+                  <th>Actualización regla</th>
+                </tr>
+              </thead>
+              <tbody>${rows2}</tbody>
+            </table>
+          </div>
+        `;
+      }
+    }
+
+    function renderResumen() {
+      renderResumenPaises();
+      renderResumenProductos();
+      renderResumenUltimasActualizaciones();
+      renderResumenPendientes();
+    }
+
+    
+    // =======================
+    // 6b) PRIORIDAD (mantenimiento)
+    // =======================
+    function parseNumberLoose(v) {
+      if (v === null || v === undefined) return null;
+      if (typeof v === "number") return isFinite(v) ? v : null;
+      let s = String(v).trim();
+      if (!s) return null;
+      // quitar % al final
+      s = s.replace(/%/g, "");
+      // manejar 1.234,56 (ES) o 1,234.56 (EN) de forma simple
+      const hasComma = s.includes(",");
+      const hasDot = s.includes(".");
+      if (hasComma && hasDot) {
+        // asumimos '.' miles y ',' decimal (ES)
+        s = s.replace(/\./g, "").replace(",", ".");
+      } else if (hasComma && !hasDot) {
+        s = s.replace(",", ".");
+      }
+      const n = Number(s);
+      return isFinite(n) ? n : null;
+    }
+
+    function daysBetween(now, dateValue) {
+      const d = parseDate(dateValue);
+      if (!d) return null;
+      const ms = now.getTime() - d.getTime();
+      return Math.floor(ms / (1000 * 60 * 60 * 24));
+    }
+
+    function getAggByCountry() {
+      const map = new Map();
+      products.forEach(p => {
+        const key = (p.country || "").trim();
+        if (!key) return;
+        if (!map.has(key)) {
+          map.set(key, {
+            country: key,
+            total: 0,
+            activos: 0,
+            lastCompleto: null,
+            lastRegla: null
+          });
+        }
+        const agg = map.get(key);
+        agg.total += 1;
+        if ((p.estado || "").toLowerCase() === "activo") agg.activos += 1;
+
+        const dc = parseDate(p.actualizacionCompleto);
+        const dr = parseDate(p.actualizacionRegla);
+        if (dc && (!agg.lastCompleto || dc > agg.lastCompleto)) agg.lastCompleto = dc;
+        if (dr && (!agg.lastRegla || dr > agg.lastRegla)) agg.lastRegla = dr;
+      });
+      return map;
+    }
+
+    function getMetricForCountry(countryName, iso3) {
+      // Preferimos ISO3 si existe
+      if (iso3) {
+        const found = metrics.find(m => (m.iso3 || "").toUpperCase() === iso3.toUpperCase());
+        if (found) return found;
+      }
+      return metrics.find(m => (m.country || "").trim() === (countryName || "").trim()) || null;
+    }
+
+    function computeComplexityScore(rows) {
+      // Si ya viene complejidadScore (0..1), usarlo
+      // Si no, usar preguntas/docs/combinaciones y normalizar entre países
+      const hasAnyComponent = rows.some(r =>
+        r.preguntas != null || r.docs != null || r.combinaciones != null
+      );
+      if (!hasAnyComponent) return rows.map(r => ({ ...r, complejidadScore: r.complejidadScore ?? null }));
+
+      const maxQ = Math.max(...rows.map(r => r.preguntas ?? 0));
+      const maxD = Math.max(...rows.map(r => r.docs ?? 0));
+      const maxC = Math.max(...rows.map(r => r.combinaciones ?? 0));
+
+      return rows.map(r => {
+        if (r.complejidadScore != null) return r;
+        const q = r.preguntas ?? 0;
+        const d = r.docs ?? 0;
+        const c = r.combinaciones ?? 0;
+        const qn = maxQ ? q / maxQ : 0;
+        const dn = maxD ? d / maxD : 0;
+        const cn = maxC ? c / maxC : 0;
+        const score = (qn + dn + cn) / 3;
+        return { ...r, complejidadScore: score };
+      });
+    }
+
+    function normalize01(values, mode) {
+      // mode: "linear" o "log"
+      const cleaned = values.map(v => (v == null || !isFinite(v)) ? null : v);
+      const present = cleaned.filter(v => v != null);
+      if (!present.length) return cleaned.map(_ => null);
+
+      if (mode === "log") {
+        const logs = present.map(v => Math.log1p(Math.max(0, v)));
+        const maxLog = Math.max(...logs);
+        return cleaned.map(v => {
+          if (v == null) return null;
+          const lv = Math.log1p(Math.max(0, v));
+          return maxLog ? (lv / maxLog) : 0;
+        });
+      } else {
+        const max = Math.max(...present);
+        const min = Math.min(...present);
+        const denom = (max - min);
+        return cleaned.map(v => {
+          if (v == null) return null;
+          if (!denom) return 0;
+          return (v - min) / denom;
+        });
+      }
+    }
+
+    function computePriorityRows() {
+      const now = new Date();
+      const recWindow = parseNumberLoose(document.getElementById("recency-window")?.value) ?? 180;
+
+      const w1 = parseNumberLoose(document.getElementById("w-c1")?.value) ?? 0.45;
+      const w2 = parseNumberLoose(document.getElementById("w-c2")?.value) ?? 0.15;
+      const w3 = parseNumberLoose(document.getElementById("w-c3")?.value) ?? 0.25;
+      const w4 = parseNumberLoose(document.getElementById("w-c4")?.value) ?? 0.15;
+
+      const agg = getAggByCountry();
+
+      // Construimos base por país (de countries para tener estado/iso3)
+      let base = countries.map(c => {
+        const a = agg.get(c.country) || { total: 0, activos: 0, lastCompleto: null, lastRegla: null };
+        const metric = getMetricForCountry(c.country, c.iso3);
+        const clientes365 = metric ? (metric.clientes365 ?? metric.clientes_365 ?? metric.clientes ?? null) : null;
+
+        // componentes opcionales
+        const preguntas = metric ? (metric.preguntas ?? metric.questions ?? null) : null;
+        const docs = metric ? (metric.docs ?? metric.documentos ?? null) : null;
+        const combinaciones = metric ? (metric.combinaciones ?? metric.combinations ?? null) : null;
+
+        const complejidadScore = metric ? (metric.complejidadScore ?? metric.complejidad ?? metric.complexity ?? null) : null;
+
+        // Recencia: por definición tuya, se basa en "completo" (país). Si no existe, caer a regla.
+        const lastCompleto = a.lastCompleto ? a.lastCompleto.toISOString().slice(0,10) : "";
+        const lastRegla = a.lastRegla ? a.lastRegla.toISOString().slice(0,10) : "";
+
+        const daysSince = a.lastCompleto
+          ? Math.max(0, Math.floor((now - a.lastCompleto) / 86400000))
+          : (a.lastRegla ? Math.max(0, Math.floor((now - a.lastRegla) / 86400000)) : 9999);
+
+        const recencyNorm = Math.min(daysSince / recWindow, 1);
+
+        return {
+          country: c.country,
+          iso3: c.iso3 || "",
+          estadoPais: c.estado || "",
+          productosTotal: a.total,
+          productosActivos: a.activos,
+          clientes365: parseNumberLoose(clientes365),
+          preguntas: parseNumberLoose(preguntas),
+          docs: parseNumberLoose(docs),
+          combinaciones: parseNumberLoose(combinaciones),
+          complejidadScore: parseNumberLoose(complejidadScore),
+          lastCompleto,
+          daysSince,
+          recencyNorm,
+          note: metric?.note || ""
+        };
+      });
+
+      base = computeComplexityScore(base);
+
+      const c1Norm = normalize01(base.map(r => r.clientes365), "log");
+      const c2Norm = normalize01(base.map(r => r.productosTotal), "linear");
+      const c3Norm = normalize01(base.map(r => r.complejidadScore), "linear");
+
+      base = base.map((r, i) => {
+        const n1 = c1Norm[i] ?? 0;
+        const n2 = c2Norm[i] ?? 0;
+        const n3 = c3Norm[i] ?? 0;
+        const n4 = r.recencyNorm ?? 1;
+
+        const score01 = (w1*n1) + (w2*n2) + (w3*n3) + (w4*n4);
+        const score100 = Math.round(score01 * 100);
+
+        let nivel = "P3";
+        if (score100 >= 80) nivel = "P0";
+        else if (score100 >= 60) nivel = "P1";
+        else if (score100 >= 40) nivel = "P2";
+
+        return { ...r, score100, nivel };
+      });
+
+      // Filtros UI
+      const filtroEstado = document.getElementById("prioridad-estado-filter")?.value || "";
+      const q = (document.getElementById("prioridad-search")?.value || "").trim().toLowerCase();
+
+      let filtered = base.filter(r => {
+        if (filtroEstado) {
+          if ((r.estadoPais || "").toLowerCase() !== filtroEstado.toLowerCase()) return false;
+        }
+        if (q) {
+          const hay = (r.country + " " + (r.iso3 || "")).toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+
+      filtered.sort((a,b) => b.score100 - a.score100);
+      return filtered;
+    }
+
+    function renderPrioridad() {
+      const warn = document.getElementById("prioridad-warn");
+      const tbody = document.getElementById("prioridad-tbody");
+      if (!tbody) return;
+
+      const rows = computePriorityRows();
+
+      // warnings: países sin métricas (clientes o complejidad)
+      const missing = rows.filter(r => r.clientes365 == null || r.complejidadScore == null);
+      if (warn) {
+        if (!metrics.length) {
+          warn.textContent = "⚠️ Aún no hay métricas importadas (C1/C3). Importa un CSV/XLSX para que el score sea útil.";
+        } else if (missing.length) {
+          warn.textContent = `⚠️ ${missing.length} país(es) no tienen clientes365 o complejidad. Score puede estar subestimado.`;
+        } else {
+          warn.textContent = "";
+        }
+      }
+
+      tbody.innerHTML = "";
+      rows.forEach((r, i) => {
+        const tr = document.createElement("tr");
+        const bgClass = (i % 2 === 0) ? "row-bg-light" : "row-bg-alt";
+        tr.classList.add(bgClass);
+
+        tr.innerHTML = `
+          <td>${i+1}</td>
+          <td>${formatCountryCell(r)}</td>
+          <td>${renderEstadoBadge(r.estadoPais)}</td>
+          <td>${r.productosTotal} / ${r.productosActivos}</td>
+          <td>${r.clientes365 ?? ""}</td>
+          <td>${(r.complejidadScore == null) ? "" : r.complejidadScore.toFixed(3)}</td>
+          <td>${formatDateForDisplay(r.lastCompleto)}</td>
+          <td>${r.daysSince === 9999 ? "" : r.daysSince}</td>
+          <td><strong>${r.score100}</strong></td>
+          <td>${r.nivel}</td>
+          <td>${r.note || ""}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function exportPrioridadCsv() {
+      const rows = computePriorityRows();
+      const out = [
+        ["rank","country","iso3","estado_pais","productos_total","productos_activos","clientes365","complejidadScore","lastCompleto","daysSince","score100","nivel","note"],
+        ...rows.map((r, i) => [
+          i+1, r.country, r.iso3, r.estadoPais, r.productosTotal, r.productosActivos,
+          r.clientes365 ?? "", r.complejidadScore ?? "", r.lastCompleto ?? "", r.daysSince === 9999 ? "" : r.daysSince,
+          r.score100, r.nivel, r.note ?? ""
+        ])
+      ];
+      exportCSV("prioridad.csv", out);
+    }
+
+    function exportMetricsCsv() {
+      const out = [
+        ["iso3","country","clientes365","complejidadScore","preguntas","docs","combinaciones","deltaCVR","note"],
+        ...metrics.map(m => [
+          m.iso3 ?? "", m.country ?? "", m.clientes365 ?? m.clientes_365 ?? "", m.complejidadScore ?? m.complejidad ?? "",
+          m.preguntas ?? "", m.docs ?? "", m.combinaciones ?? "", m.deltaCVR ?? "", m.note ?? ""
+        ])
+      ];
+      exportCSV("metricas_prioridad.csv", out);
+    }
+
+    function exportMetricsTemplate() {
+      const out = [
+        ["iso3","country","clientes365","preguntas","docs","combinaciones","complejidadScore","deltaCVR","note"],
+        ["IND","India","1234","80","18","45","","-0.03","Ejemplo"]
+      ];
+      exportCSV("plantilla_metricas.csv", out);
+    }
+
+    // ===== Importación CSV/XLSX =====
+    function parseCSVText(text) {
+      const rows = [];
+      let row = [];
+      let cur = "";
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const ch = text[i];
+        const next = text[i+1];
+
+        if (inQuotes) {
+          if (ch === '"' && next === '"') { cur += '"'; i++; continue; }
+          if (ch === '"') { inQuotes = false; continue; }
+          cur += ch;
+        } else {
+          if (ch === '"') { inQuotes = true; continue; }
+          if (ch === ',') { row.push(cur); cur = ""; continue; }
+          if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ""; continue; }
+          if (ch === '\r') { continue; }
+          cur += ch;
+        }
+      }
+      row.push(cur);
+      rows.push(row);
+      return rows.filter(r => r.some(cell => String(cell || "").trim() !== ""));
+    }
+
+    function mapHeaders(headers) {
+      const h = headers.map(x => String(x || "").trim().toLowerCase());
+      const idx = {};
+      function pick(...names) {
+        for (const n of names) {
+          const j = h.indexOf(n.toLowerCase());
+          if (j >= 0) return j;
+        }
+        return -1;
+      }
+      idx.iso3 = pick("iso3");
+      idx.country = pick("country","país","pais");
+      idx.clientes = pick("clientes365","clientes_365","total365","clientes_año","clientes_anio","clientes");
+      idx.complejidadScore = pick("complejidadscore","complejidad_score","complejidad","complexity","c3");
+      idx.preguntas = pick("preguntas","questions","n_preguntas","num_preguntas");
+      idx.docs = pick("docs","documentos","documents","n_docs","num_docs");
+      idx.combinaciones = pick("combinaciones","combinations","n_combinaciones","num_combinaciones");
+      idx.deltaCVR = pick("delta_cvr","Δcvr","cvr","delta cvr","deltacvr");
+      idx.note = pick("note","nota","observacion","observación");
+      return idx;
+    }
+
+    function rowsToMetrics(rows) {
+      if (!rows.length) return [];
+      const headers = rows[0];
+      const idx = mapHeaders(headers);
+
+      const out = [];
+      for (let i = 1; i < rows.length; i++) {
+        const r = rows[i];
+        const iso3 = idx.iso3 >= 0 ? (r[idx.iso3] || "").toString().trim() : "";
+        const country = idx.country >= 0 ? (r[idx.country] || "").toString().trim() : "";
+        if (!iso3 && !country) continue;
+
+        const m = {
+          iso3: iso3 || undefined,
+          country: country || undefined,
+          clientes365: idx.clientes >= 0 ? parseNumberLoose(r[idx.clientes]) : null,
+          complejidadScore: idx.complejidadScore >= 0 ? parseNumberLoose(r[idx.complejidadScore]) : null,
+          preguntas: idx.preguntas >= 0 ? parseNumberLoose(r[idx.preguntas]) : null,
+          docs: idx.docs >= 0 ? parseNumberLoose(r[idx.docs]) : null,
+          combinaciones: idx.combinaciones >= 0 ? parseNumberLoose(r[idx.combinaciones]) : null,
+          deltaCVR: idx.deltaCVR >= 0 ? parseNumberLoose(r[idx.deltaCVR]) : null,
+          note: idx.note >= 0 ? (r[idx.note] || "").toString().trim() : ""
+        };
+        out.push(m);
+      }
+      return out;
+    }
+
+    async function importMetricsFromFile(file) {
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (ext === "csv") {
+        const text = await file.text();
+        const rows = parseCSVText(text);
+        return rowsToMetrics(rows);
+      }
+
+      // xlsx/xls
+      if (typeof XLSX === "undefined") {
+        throw new Error("No se pudo cargar la librería XLSX. Usa CSV o abre el HTML con acceso a internet.");
+      }
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const sheetName = wb.SheetNames[0];
+      const ws = wb.Sheets[sheetName];
+      const json = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "" });
+      return rowsToMetrics(json);
+    }
+
+
+// =======================
+    // 7) NAVEGACIÓN & FILTROS
+    // =======================
+    function changeView(view) {
+      document.querySelectorAll(".menu-item").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.view === view);
+      });
+      document.querySelectorAll(".view").forEach(sec => {
+        sec.classList.toggle("active", sec.id === "view-" + view);
+      });
+      if (view === "resumen") {
+        renderResumen();
+      }
+      if (view === "prioridad") {
+        renderPrioridad();
+      }
+    }
+
+    function initNav() {
+      document.querySelectorAll(".menu-item").forEach(btn => {
+        btn.addEventListener("click", () => changeView(btn.dataset.view));
+      });
+    }
+
+    function initFilters() {
+      document.getElementById("paises-estado-filter").addEventListener("change", () => {
+        renderPaisesTable();
+        renderResumen();
+      });
+      document.getElementById("productos-estado-filter").addEventListener("change", () => {
+        renderProductosTable();
+        renderResumen();
+      });
+      ["productos-comp-from", "productos-comp-to", "productos-reg-from", "productos-reg-to"].forEach(id => {
+        document.getElementById(id).addEventListener("change", () => {
+          renderProductosTable();
+          renderResumen();
+        });
+      });
+
+      // Botones de ordenación (▲ ▼) para las fechas de Productos
+      document.querySelectorAll(".sort-btn[data-sort-col]").forEach(btn => {
+        btn.addEventListener("click", () => {
+          productosSortField = btn.getAttribute("data-sort-col"); // "comp" o "reg"
+          productosSortDirection = btn.getAttribute("data-sort-dir") === "asc" ? "asc" : "desc";
+
+          // Marcar el botón activo
+          document.querySelectorAll(".sort-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+
+          renderProductosTable();
+        });
+      });
+
+      document.getElementById("paises-export-btn").addEventListener("click", exportPaisesCsv);
+      document.getElementById("productos-export-btn").addEventListener("click", exportProductosCsv);
+
+      // Prioridad
+      const recalc = () => { renderPrioridad(); saveDataToStorage(); };
+      ["prioridad-estado-filter","prioridad-search","w-c1","w-c2","w-c3","w-c4","recency-window"].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener("input", () => renderPrioridad());
+        el.addEventListener("change", () => renderPrioridad());
+      });
+      const btnRecalc = document.getElementById("prioridad-recalc-btn");
+      if (btnRecalc) btnRecalc.addEventListener("click", () => renderPrioridad());
+      const btnExport = document.getElementById("prioridad-export-btn");
+      if (btnExport) btnExport.addEventListener("click", exportPrioridadCsv);
+
+      const btnTemplate = document.getElementById("prioridad-template-btn");
+      if (btnTemplate) btnTemplate.addEventListener("click", exportMetricsTemplate);
+
+      const btnExportMetrics = document.getElementById("prioridad-export-metrics-btn");
+      if (btnExportMetrics) btnExportMetrics.addEventListener("click", exportMetricsCsv);
+
+      const btnImport = document.getElementById("prioridad-import-btn");
+      if (btnImport) {
+        btnImport.addEventListener("click", async () => {
+          const input = document.getElementById("metrics-file");
+          const warn = document.getElementById("prioridad-warn");
+          if (!input || !input.files || !input.files[0]) {
+            if (warn) warn.textContent = "⚠️ Selecciona un archivo CSV/XLSX primero.";
+            return;
+          }
+          try {
+            const imported = await importMetricsFromFile(input.files[0]);
+            metrics.length = 0;
+            imported.forEach(x => metrics.push(x));
+            saveDataToStorage();
+            renderPrioridad();
+            if (warn) warn.textContent = `✅ Importadas ${imported.length} filas de métricas.`;
+            input.value = "";
+          } catch (e) {
+            if (warn) warn.textContent = "❌ Error importando: " + (e && e.message ? e.message : String(e));
+          }
+        });
+      }
+    }
+
+    function initAccordions() {
+      document.querySelectorAll(".accordion").forEach(acc => {
+        const header = acc.querySelector(".accordion-header");
+        header.addEventListener("click", () => {
+          acc.classList.toggle("open");
+        });
+      });
+    }
+
+    // =======================
+    // 8) INICIO
+    // =======================
+    document.addEventListener("DOMContentLoaded", () => {
+      loadDataFromStorage();
+      initNav();
+      initFilters();
+      initAccordions();
+      renderPaisesTable();
+      renderProductosTable();
+      renderResumen();
+      renderPrioridad();
+    });
+  })();
+</script>
+</body>
+</html>
