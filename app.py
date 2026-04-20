@@ -15,7 +15,16 @@ FILES = {
 
 def save_to_csv(df, key):
     """将修改后的数据保存回CSV文件，并更新Session State"""
-    df.to_csv(FILES[key], index=False)
+    # 创建一个副本来保存，防止污染内存中的日期对象
+    df_save = df.copy()
+    
+    # 【修复】保存 Productos 时，强制把日期转回你习惯的 DD/MM/YYYY 字符串格式
+    if key == "productos":
+        for col in ['Actualización Completo', 'Actualización regla']:
+            if col in df_save.columns:
+                df_save[col] = pd.to_datetime(df_save[col], errors='coerce').dt.strftime('%d/%m/%Y').fillna("")
+                
+    df_save.to_csv(FILES[key], index=False)
     st.session_state[f"df_{key}"] = df
 
 def init_data():
@@ -24,9 +33,16 @@ def init_data():
         if f"df_{key}" not in st.session_state:
             if os.path.exists(path):
                 df = pd.read_csv(path)
+                
+                # 【修复】智能处理日期格式，兼容原版和Pandas保存后的版本
                 if key == "productos":
-                    df['Actualización Completo'] = pd.to_datetime(df['Actualización Completo'], format='%d/%m/%Y', errors='coerce').dt.date
-                    df['Actualización regla'] = pd.to_datetime(df['Actualización regla'], format='%d/%m/%Y', errors='coerce').dt.date
+                    for col in ['Actualización Completo', 'Actualización regla']:
+                        if col in df.columns:
+                            # dayfirst=True 允许解析 DD/MM/YYYY
+                            temp_dates = pd.to_datetime(df[col], dayfirst=True, errors='coerce')
+                            # 必须将 NaT(空时间) 替换为 None，否则 Streamlit 日历控件会显示空白错误
+                            df[col] = [d.date() if pd.notnull(d) else None for d in temp_dates]
+                            
                 st.session_state[f"df_{key}"] = df
             else:
                 st.error(f"⚠️ No se encontró el archivo: {path}. Por favor revisa el nombre.")
@@ -60,7 +76,6 @@ if view == "Países":
         st.write("")
         st.download_button(label="Exportar a CSV", data=convert_df(filtered_df), file_name='paises_export.csv', mime='text/csv')
     
-    # 渲染带有下拉菜单的可编辑表格
     edited_df = st.data_editor(
         filtered_df, 
         use_container_width=True, 
@@ -70,7 +85,7 @@ if view == "Países":
             "Estado": st.column_config.SelectboxColumn(
                 "Estado",
                 help="Selecciona el estado del país",
-                options=["Activo", "Inactivo", "No implementado"], # <--- 这里定义了下拉选项
+                options=["Activo", "Inactivo", "No implementado"], 
                 required=True
             )
         }
@@ -101,22 +116,26 @@ elif view == "Productos":
     filtered_df = df_productos.copy()
     
     if estado_filter != "Todos":
-        filtered_df = filtered_df[filtered_df['Estado'] == estado_filter]
-        
+        filtered_df = filtered_df[filtered_df['Estado'] == filter]
+    
+    # 【修复】安全的时间过滤方式，忽略为空(None)的日期
     if comp_dates and len(comp_dates) == 2:
-        filtered_df = filtered_df[(filtered_df['Actualización Completo'] >= comp_dates[0]) & 
-                                  (filtered_df['Actualización Completo'] <= comp_dates[1])]
+        mask = filtered_df['Actualización Completo'].apply(
+            lambda d: comp_dates[0] <= d <= comp_dates[1] if d is not None else False
+        )
+        filtered_df = filtered_df[mask]
                                   
     if reg_dates and len(reg_dates) == 2:
-        filtered_df = filtered_df[(filtered_df['Actualización regla'] >= reg_dates[0]) & 
-                                  (filtered_df['Actualización regla'] <= reg_dates[1])]
+        mask = filtered_df['Actualización regla'].apply(
+            lambda d: reg_dates[0] <= d <= reg_dates[1] if d is not None else False
+        )
+        filtered_df = filtered_df[mask]
 
     with col4:
         st.write("")
         st.write("")
         st.download_button(label="Exportar a CSV", data=convert_df(filtered_df), file_name='productos_export.csv', mime='text/csv')
 
-    # 渲染带有下拉菜单和日期选择器的表格
     edited_df = st.data_editor(
         filtered_df, 
         use_container_width=True, 
@@ -126,12 +145,13 @@ elif view == "Productos":
             "Estado": st.column_config.SelectboxColumn(
                 "Estado",
                 help="Selecciona el estado del producto",
-                options=["Activo", "Inactivo"], # <--- 产品只有两个状态选项
+                options=["Activo", "Inactivo"],
                 required=True
             ),
+            # 日期控件配置不变，现在它可以正确获取到真正的日期对象了
             "Actualización Completo": st.column_config.DateColumn(
                 "Actualización Completo",
-                format="DD/MM/YYYY" # 强制日期格式显示
+                format="DD/MM/YYYY"
             ),
             "Actualización regla": st.column_config.DateColumn(
                 "Actualización regla",
@@ -208,7 +228,6 @@ elif view == "Prioridad":
         st.write("")
         st.download_button(label="Exportar prioridad (CSV)", data=convert_df(filtered_df), file_name='prioridad_export.csv', mime='text/csv')
 
-    # 配置 Prioridad 的下拉菜单
     edited_df = st.data_editor(
         filtered_df, 
         use_container_width=True, 
@@ -218,7 +237,7 @@ elif view == "Prioridad":
         column_config={
             "estado_pais": st.column_config.SelectboxColumn(
                 "Estado País",
-                options=["Activo", "Inactivo", "No implementado"], # <--- Priority表中的状态下拉
+                options=["Activo", "Inactivo", "No implementado"],
                 required=True
             )
         }
