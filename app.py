@@ -54,7 +54,7 @@ def convert_df(df):
 
 # 左侧导航栏 (Sidebar)
 st.sidebar.title("Mi panel")
-view = st.sidebar.radio("Menú", ["Países", "Productos", "Prioridad", "Resumen", "Vista Combinada"]) # 添加了最后一个选项
+view = st.sidebar.radio("Menú", ["Países", "Productos", "Prioridad", "Resumen", "Vista Maestra (3 en 1)"])
 
 # ==================== 视图 1: PAÍSES ====================
 if view == "Países":
@@ -312,31 +312,45 @@ elif view == "Resumen":
     else:
         st.info("No hay países en niveles P0 o P1 con los pesos actuales.")
 
-# ==================== 视图 5: VISTA COMBINADA ====================
-elif view == "Vista Combinada":
-    st.title("Países y Productos Combinados")
-    st.write("Esta vista muestra la relación directa entre países y sus productos disponibles.")
+# ==================== 视图 5: VISTA MAESTRA (3 EN 1) ====================
+elif view == "Vista Maestra (3 en 1)":
+    st.title("Vista Maestra: Países, Prioridad y Productos")
+    st.write("Esta tabla combina la información base, las métricas de prioridad y el listado de productos.")
     
-    # 获取内存中的最新数据
+    # 获取最新的内存数据（这样你在其他页面修改了状态或分数，这里会实时体现）
     df_paises = st.session_state["df_paises"]
     df_productos = st.session_state["df_productos"]
+    df_prioridad = st.session_state["df_prioridad"]
     
-    # 执行动态合并
-    df_merged = pd.merge(
-        df_paises, 
-        df_productos, 
-        on='País', 
-        how='inner', # 用 inner 表示只显示“有产品的国家”
-        suffixes=('_País', '_Producto')
-    )
+    # 提取优先级表的核心列
+    # 注意：这里的列名要根据你 df_prioridad 实际存在的列名来定
+    # 如果你在之前的编辑代码里生成了 nivel 和 score100，这里就能直接用
+    cols_prio = ['country', 'clientes365', 'complejidadScore', 'daysSince']
+    if 'score100' in df_prioridad.columns: cols_prio.append('score100')
+    if 'nivel' in df_prioridad.columns: cols_prio.append('nivel')
+        
+    df_prio_clean = df_prioridad[cols_prio]
     
-    # 增加一个下载按钮
+    # 第一步：合并国家和优先级
+    df_step1 = pd.merge(df_paises, df_prio_clean, left_on='País', right_on='country', how='left')
+    if 'country' in df_step1.columns:
+        df_step1 = df_step1.drop(columns=['country'])
+        
+    # 第二步：合并产品
+    df_master = pd.merge(df_step1, df_productos, on='País', how='inner', suffixes=('_País', '_Producto'))
+    
+    # 清理多余的列
+    if 'ISO3_Producto' in df_master.columns:
+        df_master = df_master.drop(columns=['ISO3_Producto'])
+    df_master = df_master.rename(columns={'ISO3_País': 'ISO3'})
+    
+    # 下载按钮
     st.download_button(
-        label="Exportar a CSV", 
-        data=convert_df(df_merged), 
-        file_name='paises_productos_combinado.csv', 
+        label="Descargar Tabla Maestra (CSV)", 
+        data=convert_df(df_master), 
+        file_name='master_data_fusion.csv', 
         mime='text/csv'
     )
     
-    # 显示合并后的表格
-    st.dataframe(df_merged, use_container_width=True, hide_index=True)
+    # 在界面上展示
+    st.dataframe(df_master, use_container_width=True, hide_index=True)
