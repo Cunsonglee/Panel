@@ -54,7 +54,7 @@ def convert_df(df):
 
 # 左侧导航栏 (Sidebar)
 st.sidebar.title("Mi panel")
-view = st.sidebar.radio("Menú", ["Países", "Productos", "Prioridad", "Resumen"])
+view = st.sidebar.radio("Menú", ["Países", "Productos", "Prioridad", "Resumen", "Vista Combinada"]) # 添加了最后一个选项
 
 # ==================== 视图 1: PAÍSES ====================
 if view == "Países":
@@ -311,3 +311,32 @@ elif view == "Resumen":
         st.dataframe(top_paises[['country', 'iso3', 'score100', 'nivel']], use_container_width=True, hide_index=True)
     else:
         st.info("No hay países en niveles P0 o P1 con los pesos actuales.")
+
+# ==================== 视图 5: VISTA COMBINADA ====================
+elif view == "Vista Combinada":
+    st.title("Países y Productos Combinados")
+    st.write("Esta vista muestra la relación directa entre países y sus productos disponibles.")
+    
+    # 获取内存中的最新数据
+    df_paises = st.session_state["df_paises"]
+    df_productos = st.session_state["df_productos"]
+    
+    # 执行动态合并
+    df_merged = pd.merge(
+        df_paises, 
+        df_productos, 
+        on='País', 
+        how='inner', # 用 inner 表示只显示“有产品的国家”
+        suffixes=('_País', '_Producto')
+    )
+    
+    # 增加一个下载按钮
+    st.download_button(
+        label="Exportar a CSV", 
+        data=convert_df(df_merged), 
+        file_name='paises_productos_combinado.csv', 
+        mime='text/csv'
+    )
+    
+    # 显示合并后的表格
+    st.dataframe(df_merged, use_container_width=True, hide_index=True)
