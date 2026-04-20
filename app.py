@@ -24,7 +24,6 @@ def init_data():
         if f"df_{key}" not in st.session_state:
             if os.path.exists(path):
                 df = pd.read_csv(path)
-                # 预处理日期列为 date 对象，方便在 data_editor 中直接弹出日历选择器
                 if key == "productos":
                     df['Actualización Completo'] = pd.to_datetime(df['Actualización Completo'], format='%d/%m/%Y', errors='coerce').dt.date
                     df['Actualización regla'] = pd.to_datetime(df['Actualización regla'], format='%d/%m/%Y', errors='coerce').dt.date
@@ -34,7 +33,6 @@ def init_data():
 
 init_data()
 
-# 将 DataFrame 转换为 CSV 格式以下载
 def convert_df(df):
     return df.to_csv(index=False).encode('utf-8')
 
@@ -45,13 +43,12 @@ view = st.sidebar.radio("Menú", ["Países", "Productos", "Prioridad", "Resumen"
 # ==================== 视图 1: PAÍSES ====================
 if view == "Países":
     st.title("Países")
-    st.info("💡 Puedes editar los datos directamente en la tabla. Los cambios se guardarán automáticamente.")
+    st.info("💡 Haz doble clic en la columna 'Estado' para elegir opciones de la lista desplegable.")
     
     col1, col2 = st.columns([1, 4])
     with col1:
-        estado_filter = st.selectbox("Estado:", ["Todos", "Activo", "Inactivo", "No implementado"])
+        estado_filter = st.selectbox("Filtro Estado:", ["Todos", "Activo", "Inactivo", "No implementado"])
     
-    # 获取内存中的数据
     df_paises = st.session_state["df_paises"]
     filtered_df = df_paises.copy()
     
@@ -63,20 +60,27 @@ if view == "Países":
         st.write("")
         st.download_button(label="Exportar a CSV", data=convert_df(filtered_df), file_name='paises_export.csv', mime='text/csv')
     
-    # 渲染可编辑表格
+    # 渲染带有下拉菜单的可编辑表格
     edited_df = st.data_editor(
         filtered_df, 
         use_container_width=True, 
         hide_index=True,
-        num_rows="dynamic" if estado_filter == "Todos" else "fixed" # 只有在Todos视图下允许增删行，防止索引错乱
+        num_rows="dynamic" if estado_filter == "Todos" else "fixed",
+        column_config={
+            "Estado": st.column_config.SelectboxColumn(
+                "Estado",
+                help="Selecciona el estado del país",
+                options=["Activo", "Inactivo", "No implementado"], # <--- 这里定义了下拉选项
+                required=True
+            )
+        }
     )
     
-    # 自动保存逻辑
     if not edited_df.equals(filtered_df):
         if estado_filter == "Todos":
             df_paises = edited_df
         else:
-            df_paises.update(edited_df) # 如果在过滤视图下，只更新修改的值
+            df_paises.update(edited_df)
         save_to_csv(df_paises, "paises")
         st.success("¡Cambios guardados!")
         st.rerun()
@@ -87,7 +91,7 @@ elif view == "Productos":
     
     col1, col2, col3, col4 = st.columns([2, 3, 3, 2])
     with col1:
-        estado_filter = st.selectbox("Estado:", ["Todos", "Activo", "Inactivo"])
+        estado_filter = st.selectbox("Filtro Estado:", ["Todos", "Activo", "Inactivo"])
     with col2:
         comp_dates = st.date_input("Actualización Completo (Rango)", value=None)
     with col3:
@@ -112,11 +116,28 @@ elif view == "Productos":
         st.write("")
         st.download_button(label="Exportar a CSV", data=convert_df(filtered_df), file_name='productos_export.csv', mime='text/csv')
 
+    # 渲染带有下拉菜单和日期选择器的表格
     edited_df = st.data_editor(
         filtered_df, 
         use_container_width=True, 
         hide_index=True,
-        num_rows="dynamic" if estado_filter == "Todos" else "fixed"
+        num_rows="dynamic" if estado_filter == "Todos" else "fixed",
+        column_config={
+            "Estado": st.column_config.SelectboxColumn(
+                "Estado",
+                help="Selecciona el estado del producto",
+                options=["Activo", "Inactivo"], # <--- 产品只有两个状态选项
+                required=True
+            ),
+            "Actualización Completo": st.column_config.DateColumn(
+                "Actualización Completo",
+                format="DD/MM/YYYY" # 强制日期格式显示
+            ),
+            "Actualización regla": st.column_config.DateColumn(
+                "Actualización regla",
+                format="DD/MM/YYYY"
+            )
+        }
     )
 
     if not edited_df.equals(filtered_df):
@@ -134,7 +155,7 @@ elif view == "Prioridad":
     
     col1, col2, col3 = st.columns([2, 3, 2])
     with col1:
-        estado_filter = st.selectbox("Estado país:", ["Todos", "Activo", "Inactivo", "No implementado"])
+        estado_filter = st.selectbox("Filtro Estado país:", ["Todos", "Activo", "Inactivo", "No implementado"])
     with col2:
         search_query = st.text_input("Búsqueda (País o ISO3):", placeholder="Ej: Sri Lanka o LKA")
         
@@ -159,7 +180,6 @@ elif view == "Prioridad":
             filtered_df['iso3'].str.lower().str.contains(query, na=False)
         ]
     
-    # 动态计算逻辑
     filtered_df['clientes365'] = pd.to_numeric(filtered_df['clientes365'], errors='coerce').fillna(0)
     filtered_df['productos_activos'] = pd.to_numeric(filtered_df['productos_activos'], errors='coerce').fillna(0)
     filtered_df['complejidadScore'] = pd.to_numeric(filtered_df['complejidadScore'], errors='coerce').fillna(0)
@@ -188,17 +208,23 @@ elif view == "Prioridad":
         st.write("")
         st.download_button(label="Exportar prioridad (CSV)", data=convert_df(filtered_df), file_name='prioridad_export.csv', mime='text/csv')
 
-    # 可编辑表格：锁定计算结果列，防止被误改
+    # 配置 Prioridad 的下拉菜单
     edited_df = st.data_editor(
         filtered_df, 
         use_container_width=True, 
         hide_index=True,
-        disabled=["score100", "nivel"], # 核心规则：分数和级别只能自动计算，不能手动填
-        num_rows="dynamic" if estado_filter == "Todos" and not search_query else "fixed"
+        disabled=["score100", "nivel"], 
+        num_rows="dynamic" if estado_filter == "Todos" and not search_query else "fixed",
+        column_config={
+            "estado_pais": st.column_config.SelectboxColumn(
+                "Estado País",
+                options=["Activo", "Inactivo", "No implementado"], # <--- Priority表中的状态下拉
+                required=True
+            )
+        }
     )
 
     if not edited_df.equals(filtered_df):
-        # 保存前，移除动态计算的列，以免污染原数据源
         clean_edited = edited_df.drop(columns=["score100", "nivel"], errors='ignore')
         if estado_filter == "Todos" and not search_query:
             df_prioridad = clean_edited
@@ -212,7 +238,6 @@ elif view == "Prioridad":
 elif view == "Resumen":
     st.title("Resumen del Panel")
 
-    # 从内存读取最新数据
     df_paises = st.session_state["df_paises"]
     df_productos = st.session_state["df_productos"]
     df_prioridad = st.session_state["df_prioridad"]
