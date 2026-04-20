@@ -1,0 +1,161 @@
+﻿País,ISO3,Estado_País,Implementación,Nota_País,clientes365,complejidadScore,daysSince,score100,nivel,Estado_Producto,Producto,Actualización Completo,Actualización regla,Nota_Producto
+Angola,AGO,Activo,Pre-visa,ID 36,,,342,17,P3,Activo,ago_tourist,2025-05-13,,https://visagov.atlassian.net/browse/PRO-293
+Antigua y Barbuda,ATG,Inactivo,eVisa,ID 40,,,,20,P3,Inactivo,atg_transit,,,
+Antigua y Barbuda,ATG,Inactivo,eVisa,ID 40,,,,20,P3,Inactivo,atg_transit-urgent,,,
+Antigua y Barbuda,ATG,Inactivo,eVisa,ID 40,,,,20,P3,Inactivo,atg_visitor_single,,,
+Arabia Saudí,SAU,Activo,eVisa,ID 20,,,235,20,P3,Activo,sau_tourist,2025-08-28,,https://visagov.atlassian.net/browse/PRO-349
+Arabia Saudí,SAU,Activo,eVisa,ID 20,,,235,20,P3,Activo,sau_tourist_urgent,2025-08-28,,https://visagov.atlassian.net/browse/PRO-349
+Arabia Saudí,SAU,Activo,eVisa,ID 20,,,235,20,P3,Activo,sau_transit,2025-08-28,,https://visagov.atlassian.net/browse/PRO-349
+Armenia,ARM,Activo,eVisa,ID 32,,,452,18,P3,Activo,arm_visitor-120,,2025-01-23,https://visagov.atlassian.net/browse/VIS-905
+Armenia,ARM,Activo,eVisa,ID 32,,,452,18,P3,Activo,arm_visitor-21,,2025-01-23,https://visagov.atlassian.net/browse/VIS-905
+Australia,AUS,Activo,eVisitor,ID 2,,,339,18,P3,Activo,aus_simple,2025-05-16,2026-01-23,https://visagov.atlassian.net/browse/PRO-957
+Australia,AUS,Activo,eVisitor,ID 2,,,339,18,P3,Inactivo,aus_urgent,,,
+Azerbaiyán,AZE,Activo,eVisa,ID 1,,,284,18,P3,Activo,aze_simple,2025-07-10,2026-03-16,https://visagov.atlassian.net/browse/PRO-1035
+Azerbaiyán,AZE,Activo,eVisa,ID 1,,,284,18,P3,Activo,aze_urgent,2025-07-10,,https://visagov.atlassian.net/browse/PRO-422
+Baréin,BHR,Activo,eVisa,ID 21,,,388,20,P3,Inactivo,bhr_formula_1,2025-03-28,,https://visagov.atlassian.net/browse/PRO-217
+Baréin,BHR,Activo,eVisa,ID 21,,,388,20,P3,Activo,bhr_multiple_month,2025-03-28,2026-04-08,https://visagov.atlassian.net/browse/PRO-1047
+Baréin,BHR,Activo,eVisa,ID 21,,,388,20,P3,Activo,bhr_single_entry,2025-03-28,2026-04-08,https://visagov.atlassian.net/browse/PRO-1047
+Benín,BEN,Activo,eVisa,ID 28,,,311,20,P3,Activo,ben_multiple_entries_30,2025-06-13,2025-08-21,https://visagov.atlassian.net/browse/PRO-420
+Benín,BEN,Activo,eVisa,ID 28,,,311,20,P3,Activo,ben_multiple_entries_90,2025-06-13,2025-08-21,https://visagov.atlassian.net/browse/PRO-420
+Benín,BEN,Activo,eVisa,ID 28,,,311,20,P3,Activo,ben_single_entry_30,2025-06-13,2025-08-21,https://visagov.atlassian.net/browse/PRO-420
+Brasil,BRA,Inactivo,eVisa,ID 48,,,,17,P3,Inactivo,bra_evisa,,,
+Camboya,KHM,Activo,eVisa,ID 10,,,320,17,P3,Activo,khm_tourism,2025-06-04,2025-06-05,https://visagov.atlassian.net/browse/PRO-419
+Canadá,CAN,Activo,eTA,ID 3,,,312,18,P3,Activo,can_simple,2025-06-12,2025-12-03,https://visagov.atlassian.net/browse/PRO-358
+Canadá,CAN,Activo,eTA,ID 3,,,312,18,P3,Inactivo,can_urgent,,,
+Colombia,COL,Activo,CheckMig,ID 49,,,336,17,P3,Activo,col_checkmig,2025-05-19,,https://visagov.atlassian.net/browse/PRO-331
+Corea del Sur,KOR,Activo,K-ETA,ID 51,,,4,4,P3,Inactivo,kor_urgent,,,
+Corea del Sur,KOR,Activo,K-ETA,ID 51,,,4,4,P3,Activo,korea_eta,2026-04-16,2026-04-16,https://visagov.atlassian.net/browse/PRO-1003
+Costa de Marfil,CIV,Activo,eVisa,ID 4,,,266,17,P3,Activo,civ_simple,2025-07-28,,https://visagov.atlassian.net/browse/PRO-424
+Cuba,CUB,Activo,eVisa,ID 5,,,419,22,P3,Activo,cub_evisa_except_usa,2025-02-25,2026-01-27,https://visagov.atlassian.net/browse/PRO-954
+Cuba,CUB,Activo,eVisa,ID 5,,,419,22,P3,Inactivo,cub_evisa_usa,,,
+Cuba,CUB,Activo,eVisa,ID 5,,,419,22,P3,Inactivo,cub_from_us,,,
+Cuba,CUB,Activo,eVisa,ID 5,,,419,22,P3,Inactivo,cub_from_worldwide,,,
+Egipto,EGY,Activo,eVisa,ID 6,,,266,22,P3,Activo,egy_multiple_entry,2025-07-28,,https://visagov.atlassian.net/browse/PRO-348
+Egipto,EGY,Activo,eVisa,ID 6,,,266,22,P3,Activo,egy_multiple_entry_urgent,2025-07-28,,https://visagov.atlassian.net/browse/PRO-348
+Egipto,EGY,Activo,eVisa,ID 6,,,266,22,P3,Activo,egy_single_entry,2025-07-28,,https://visagov.atlassian.net/browse/PRO-348
+Egipto,EGY,Activo,eVisa,ID 6,,,266,22,P3,Activo,egy_single_entry_urgent,2025-07-28,,https://visagov.atlassian.net/browse/PRO-348
+Emiratos Árabes Unidos,ARE,Inactivo,eVisa,ID 44,,,,20,P3,Inactivo,are_tourist_single,,,
+Emiratos Árabes Unidos,ARE,Inactivo,eVisa,ID 44,,,,20,P3,Inactivo,are_transit_2_days,,,
+Emiratos Árabes Unidos,ARE,Inactivo,eVisa,ID 44,,,,20,P3,Inactivo,are_transit_4_days,,,
+Estados Unidos,USA,Activo,ESTA - B1/B2,ID 17,,,144,20,P3,Activo,usa_b1_b2_visitor_visa,2025-11-27,,https://visagov.atlassian.net/browse/PM-1
+Estados Unidos,USA,Activo,ESTA - B1/B2,ID 17,,,144,20,P3,Activo,usa_simple,2025-07-07,2026-02-25,https://visagov.atlassian.net/browse/PRO-1012
+Estados Unidos,USA,Activo,ESTA - B1/B2,ID 17,,,144,20,P3,Activo,usa_simple_urgent,2025-07-07,2026-01-05,https://visagov.atlassian.net/browse/PRO-913
+Estados Unidos,USA,Activo,ESTA - B1/B2,ID 17,,,144,20,P3,Inactivo,usa_transit,,,
+Estados Unidos,USA,Activo,ESTA - B1/B2,ID 17,,,144,20,P3,Inactivo,usa_transit_urgent,,,
+Etiopía,ETH,Activo,eVisa,ID 7,,,305,18,P3,Activo,eth_single_entry_30,2025-06-19,,https://visagov.atlassian.net/browse/PRO-421
+Etiopía,ETH,Activo,eVisa,ID 7,,,305,18,P3,Inactivo,eth_single_entry_90,,,
+Georgia,GEO,Inactivo,eVisa,ID 43,,,,17,P3,Inactivo,geo_multiple,,,
+Guinea,GIN,Activo,eVisa,ID 33,,,257,20,P3,Activo,gin_tourist,2025-08-06,,https://visagov.atlassian.net/browse/PRO-500
+Guinea,GIN,Activo,eVisa,ID 33,,,257,20,P3,Activo,gin_transborderment,2025-08-06,,https://visagov.atlassian.net/browse/PRO-500
+Guinea,GIN,Activo,eVisa,ID 33,,,257,20,P3,Activo,gin_transit,2025-08-06,,https://visagov.atlassian.net/browse/PRO-500
+India,IND,Activo,eVisa,ID 8,,,19,13,P3,Activo,ind_business,,2026-01-07,https://visagov.atlassian.net/browse/PRO-914
+India,IND,Activo,eVisa,ID 8,,,19,13,P3,Activo,ind_conference,,2026-01-07,https://visagov.atlassian.net/browse/PRO-914
+India,IND,Activo,eVisa,ID 8,,,19,13,P3,Activo,ind_medical,,2026-01-07,https://visagov.atlassian.net/browse/PRO-914
+India,IND,Activo,eVisa,ID 8,,,19,13,P3,Activo,ind_medical_attendant,,2026-01-07,https://visagov.atlassian.net/browse/PRO-914
+India,IND,Activo,eVisa,ID 8,,,19,13,P3,Activo,ind_tourist-1,,2026-01-07,https://visagov.atlassian.net/browse/PRO-914
+India,IND,Activo,eVisa,ID 8,,,19,13,P3,Activo,ind_tourist-30,,2026-04-01,https://visagov.atlassian.net/browse/PRO-1060
+India,IND,Activo,eVisa,ID 8,,,19,13,P3,Activo,ind_tourist-5,,2026-01-07,https://visagov.atlassian.net/browse/PRO-914
+Indonesia,IDN,Activo,e-VOA,ID 52,,,319,20,P3,Activo,idn_evoa,2025-06-05,2026-03-18,https://visagov.atlassian.net/browse/PRO-1040
+Indonesia,IDN,Activo,e-VOA,ID 52,,,319,20,P3,Inactivo,idn_evoa_bali,,,
+Indonesia,IDN,Activo,e-VOA,ID 52,,,319,20,P3,Inactivo,idn_urgent,,,
+Iran,IRN,Inactivo,Pre-visa,ID 45,,,,18,P3,Inactivo,irn_tourist,,,
+Iran,IRN,Inactivo,Pre-visa,ID 45,,,,18,P3,Inactivo,irn_transit,,,
+Kenia,KEN,Activo,eTA,ID 9,,,258,25,P3,Inactivo,ken_east_africa,,2025-11-18,https://visagov.atlassian.net/browse/PRO-845
+Kenia,KEN,Activo,eTA,ID 9,,,258,25,P3,Inactivo,ken_east_africa_old,,,
+Kenia,KEN,Activo,eTA,ID 9,,,258,25,P3,Inactivo,ken_multiple_entry,,,
+Kenia,KEN,Activo,eTA,ID 9,,,258,25,P3,Activo,ken_simple,2025-08-05,2025-11-21,https://visagov.atlassian.net/browse/PRO-347
+Kenia,KEN,Activo,eTA,ID 9,,,258,25,P3,Inactivo,ken_single_entry,,,
+Kenia,KEN,Activo,eTA,ID 9,,,258,25,P3,Inactivo,ken_transit,,,
+Kirguizistán,KGZ,Inactivo,eVisa,ID 31,,,,20,P3,Inactivo,kgz_tourist-30,,,
+Kirguizistán,KGZ,Inactivo,eVisa,ID 31,,,,20,P3,Inactivo,kgz_tourist-60,,,
+Kirguizistán,KGZ,Inactivo,eVisa,ID 31,,,,20,P3,Inactivo,kgz_transit,,,
+Kuwait,KWT,Activo,eVisa,ID 27,,,4,2,P3,Activo,kwt_tourist_single,2026-04-16,,https://visagov.atlassian.net/browse/PRO-1050
+Laos,LAO,Activo,eVisa,ID 29,,,396,17,P3,Activo,lao_tourist,2025-03-20,2026-04-10,https://visagov.atlassian.net/browse/PRO-1070
+Madagascar,MDG,Activo,eVisa,ID 30,,,236,20,P3,Activo,mdg_tourist-15,2025-08-27,,https://visagov.atlassian.net/browse/PRO-496
+Madagascar,MDG,Activo,eVisa,ID 30,,,236,20,P3,Activo,mdg_tourist-30,2025-08-27,,https://visagov.atlassian.net/browse/PRO-496
+Madagascar,MDG,Activo,eVisa,ID 30,,,236,20,P3,Activo,mdg_tourist-60,2025-08-27,,https://visagov.atlassian.net/browse/PRO-496
+Montserrat,MSR,Inactivo,eVisa,ID 34,,,,17,P3,Inactivo,msr_tourist,,,
+Myanmar,MMR,Activo,eVisa,ID 12,,,242,18,P3,Activo,mmr_business,2025-08-21,,https://visagov.atlassian.net/browse/PRO-494
+Myanmar,MMR,Activo,eVisa,ID 12,,,242,18,P3,Activo,mmr_tourist,2025-08-21,,https://visagov.atlassian.net/browse/PRO-494
+México,MEX,Activo,FMM,ID 39,,,308,17,P3,Activo,mex_tourist_180_land,2025-06-16,,https://visagov.atlassian.net/browse/VIS-1213
+Nepal,NPL,Activo,Pre-visa,ID 35,,,132,16,P3,Activo,npl_tourist-15,2025-12-09,2026-01-26,https://visagov.atlassian.net/browse/PRO-923
+Nepal,NPL,Activo,Pre-visa,ID 35,,,132,16,P3,Activo,npl_tourist-30,2025-12-09,2026-01-26,https://visagov.atlassian.net/browse/PRO-923
+Nepal,NPL,Activo,Pre-visa,ID 35,,,132,16,P3,Activo,npl_tourist-90,2025-12-09,2026-01-26,https://visagov.atlassian.net/browse/PRO-923
+Nueva Zelanda,NZL,Activo,NZeTA,ID 26,,,320,20,P3,Activo,nzl_tourist,2025-06-04,2025-07-22,https://visagov.atlassian.net/browse/PRO-344
+Nueva Zelanda,NZL,Activo,NZeTA,ID 26,,,320,20,P3,Inactivo,nzl_transit,,,
+Nueva Zelanda,NZL,Activo,NZeTA,ID 26,,,320,20,P3,Inactivo,nzl_urgent,,,
+Omán,OMN,Activo,eVisa,ID 13,,,418,18,P3,Activo,omn_multiple_1_year,2025-02-26,2025-04-02,https://visagov.atlassian.net/browse/VIS-966
+Omán,OMN,Activo,eVisa,ID 13,,,418,18,P3,Activo,omn_simple_30_days,2025-02-26,2026-01-07,https://visagov.atlassian.net/browse/PRO-915
+Papúa Nueva Guinea,PNG,Activo,eVisa,ID 37,,,257,18,P3,Activo,png_easy-visitor-30,2025-08-06,,https://visagov.atlassian.net/browse/PRO-499
+Papúa Nueva Guinea,PNG,Activo,eVisa,ID 37,,,257,18,P3,Activo,png_easy-visitor-60,2025-08-06,,https://visagov.atlassian.net/browse/PRO-499
+Puerto Rico,PRI,Activo,ESTA,ID 38,,,287,22,P3,Activo,pri_simple,2025-07-07,2026-01-05,https://visagov.atlassian.net/browse/PRO-913
+Puerto Rico,PRI,Activo,ESTA,ID 38,,,287,22,P3,Activo,pri_simple_urgent,2025-07-07,2026-01-05,https://visagov.atlassian.net/browse/PRO-913
+Puerto Rico,PRI,Activo,ESTA,ID 38,,,287,22,P3,Inactivo,pri_transit,,,
+Puerto Rico,PRI,Activo,ESTA,ID 38,,,287,22,P3,Inactivo,pri_transit_urgent,,,
+Reino Unido,GBR,Activo,eTA,ID 53,,,6,4,P3,Activo,gbr_eta,2026-04-14,2026-04-14,https://visagov.atlassian.net/browse/PRO-1072
+Reino Unido,GBR,Activo,eTA,ID 53,,,6,4,P3,Inactivo,gbr_urgent,,2025-11-12,https://visagov.atlassian.net/browse/PRO-833
+República Dominicana,DOM,Activo,e-Ticket,ID 47,,,178,18,P3,Activo,dom_eticket,2025-10-24,,https://visagov.atlassian.net/browse/PRO-578
+República Dominicana,DOM,Activo,e-Ticket,ID 47,,,178,18,P3,Activo,dom_eticket_urgent,2025-10-24,,https://visagov.atlassian.net/browse/PRO-578
+Ruanda,RWA,Activo,eVisa,ID 14,,,272,23,P3,Activo,rwa_east_africa,2025-07-22,,https://visagov.atlassian.net/browse/PRO-357
+Ruanda,RWA,Activo,eVisa,ID 14,,,272,23,P3,Activo,rwa_family_30,2025-07-22,,https://visagov.atlassian.net/browse/PRO-357
+Ruanda,RWA,Activo,eVisa,ID 14,,,272,23,P3,Activo,rwa_holiday_30,2025-07-22,,https://visagov.atlassian.net/browse/PRO-357
+Ruanda,RWA,Activo,eVisa,ID 14,,,272,23,P3,Activo,rwa_multi,2025-07-22,,https://visagov.atlassian.net/browse/PRO-357
+Ruanda,RWA,Activo,eVisa,ID 14,,,272,23,P3,Activo,rwa_transit,2025-07-22,,https://visagov.atlassian.net/browse/PRO-357
+Rusia,RUS,Inactivo,eVisa,ID 25,,,,20,P3,Inactivo,rus_far_eastern,,,
+Rusia,RUS,Inactivo,eVisa,ID 25,,,,20,P3,Inactivo,rus_kaliningrad,,,
+Rusia,RUS,Inactivo,eVisa,ID 25,,,,20,P3,Inactivo,rus_saint_petersburg,,,
+Sierra Leone,SLE,Inactivo,eVisa,ID 50,,,455,18,P3,Activo,sle_multiple_entry_evisa,2025-01-20,,https://visagov.atlassian.net/browse/VIS-413
+Sierra Leone,SLE,Inactivo,eVisa,ID 50,,,455,18,P3,Activo,sle_single_entry_evisa,2025-01-20,,https://visagov.atlassian.net/browse/VIS-413
+Singapur,SGP,Activo,SG Arrival Card,ID 22,,,242,17,P3,Activo,sgp_electronic_arrival_card,2025-08-21,,https://visagov.atlassian.net/browse/PRO-497
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Activo,lka_business,2025-11-06,,https://visagov.atlassian.net/browse/PRO-71
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Inactivo,lka_tourist,,,
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Inactivo,lka_tourist_3_months,,,
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Inactivo,lka_tourist_30_days,,,
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Inactivo,lka_tourist_60_days,,,
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Activo,lka_tourist_eta,2025-09-01,,https://visagov.atlassian.net/browse/PRO-609
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Activo,lka_tourist_eta_urgent,2025-09-01,,https://visagov.atlassian.net/browse/PRO-609
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Activo,lka_transit,2025-09-30,,https://visagov.atlassian.net/browse/PRO-72
+Sri Lanka,LKA,Activo,eTA,ID 11,,,165,29,P3,Inactivo,tourist_6_month,,,
+Tailandia,THA,Activo,eVisa,ID 46,,,269,25,P3,Activo,tha_business_multiple,2025-05-27,2025-10-27,https://visagov.atlassian.net/browse/PRO-177
+Tailandia,THA,Activo,eVisa,ID 46,,,269,25,P3,Activo,tha_business_single,2025-05-27,2025-10-27,https://visagov.atlassian.net/browse/PRO-177
+Tailandia,THA,Activo,eVisa,ID 46,,,269,25,P3,Activo,tha_tourist_multiple,2025-05-27,2025-10-27,https://visagov.atlassian.net/browse/PRO-177
+Tailandia,THA,Activo,eVisa,ID 46,,,269,25,P3,Activo,tha_tourist_single,2025-07-25,2025-10-27,https://visagov.atlassian.net/browse/PRO-177
+Tailandia,THA,Activo,eVisa,ID 46,,,269,25,P3,Activo,tha_transit_single,2025-07-25,2025-10-27,https://visagov.atlassian.net/browse/PRO-177
+Tailandia,THA,Activo,eVisa,ID 46,,,269,25,P3,Inactivo,tha_volunteer,,,
+Tanzania,TZA,Activo,eVisa,ID 42,,,283,20,P3,Activo,tza_multiple,2025-07-11,,https://visagov.atlassian.net/browse/PRO-457
+Tanzania,TZA,Activo,eVisa,ID 42,,,283,20,P3,Activo,tza_ordinary,2025-07-11,2026-01-27,https://visagov.atlassian.net/browse/PRO-960
+Tanzania,TZA,Activo,eVisa,ID 42,,,283,20,P3,Inactivo,tza_transit,,,
+Tayikistán,TJK,Inactivo,eVisa,ID 41,,,,22,P3,Inactivo,tjk_multiple,,,
+Tayikistán,TJK,Inactivo,eVisa,ID 41,,,,22,P3,Inactivo,tjk_multiple-gbao,,,
+Tayikistán,TJK,Inactivo,eVisa,ID 41,,,,22,P3,Inactivo,tjk_single,,,
+Tayikistán,TJK,Inactivo,eVisa,ID 41,,,,22,P3,Inactivo,tjk_single-gbao,,,
+Turquía,TUR,Activo,eVisa,ID 15,,,410,18,P3,Activo,tur_tourist,2025-03-06,2026-04-17,https://visagov.atlassian.net/browse/PRO-1091
+Turquía,TUR,Activo,eVisa,ID 15,,,410,18,P3,Activo,tur_tourist_urgent,2025-03-06,2026-04-17,https://visagov.atlassian.net/browse/PRO-1091
+Uganda,UGA,Activo,eVisa,ID 16,,,258,23,P3,Activo,uga_east-african,2025-08-05,2026-04-10,https://visagov.atlassian.net/browse/PRO-1067
+Uganda,UGA,Activo,eVisa,ID 16,,,258,23,P3,Activo,uga_multiple-1,2025-08-05,2026-04-10,https://visagov.atlassian.net/browse/PRO-1067
+Uganda,UGA,Activo,eVisa,ID 16,,,258,23,P3,Activo,uga_multiple-12,2025-08-05,2026-04-10,https://visagov.atlassian.net/browse/PRO-1067
+Uganda,UGA,Activo,eVisa,ID 16,,,258,23,P3,Activo,uga_tourism,2025-08-05,2026-04-10,https://visagov.atlassian.net/browse/PRO-1067
+Uganda,UGA,Activo,eVisa,ID 16,,,258,23,P3,Activo,uga_transit,2025-08-05,2026-04-10,https://visagov.atlassian.net/browse/PRO-1067
+Vietnam,VNM,Activo,eVisa,ID 18,,,326,22,P3,Activo,vnm_evisa_multi,2025-05-29,2026-04-20,https://visagov.atlassian.net/browse/PRO-1093
+Vietnam,VNM,Activo,eVisa,ID 18,,,326,22,P3,Activo,vnm_evisa_single,2025-05-29,2026-04-20,https://visagov.atlassian.net/browse/PRO-1093
+Vietnam,VNM,Activo,eVisa,ID 18,,,326,22,P3,Inactivo,vnm_multiple,,,
+Vietnam,VNM,Activo,eVisa,ID 18,,,326,22,P3,Inactivo,vnm_simple,,,
+Yibuti,DJI,Activo,eVisa,ID 19,,,430,18,P3,Activo,dji_short_stay,2025-02-14,2025-11-17,https://visagov.atlassian.net/browse/PRO-154
+Yibuti,DJI,Activo,eVisa,ID 19,,,430,18,P3,Activo,dji_transit,2025-02-14,2025-07-03,https://visagov.atlassian.net/browse/PRO-154
+Zambia,ZMB,Activo,eVisa,ID 23,,,178,28,P3,Inactivo,zmb_business_double,,,
+Zambia,ZMB,Activo,eVisa,ID 23,,,178,28,P3,Inactivo,zmb_business_multiple,,,
+Zambia,ZMB,Activo,eVisa,ID 23,,,178,28,P3,Inactivo,zmb_business_single,,,
+Zambia,ZMB,Activo,eVisa,ID 23,,,178,28,P3,Activo,zmb_kaza,2025-10-24,,https://visagov.atlassian.net/browse/PRO-342
+Zambia,ZMB,Activo,eVisa,ID 23,,,178,28,P3,Activo,zmb_tourist_double,2025-10-24,,https://visagov.atlassian.net/browse/PRO-342
+Zambia,ZMB,Activo,eVisa,ID 23,,,178,28,P3,Activo,zmb_tourist_multiple,2025-10-24,,https://visagov.atlassian.net/browse/PRO-342
+Zambia,ZMB,Activo,eVisa,ID 23,,,178,28,P3,Activo,zmb_tourist_single,2025-10-24,,https://visagov.atlassian.net/browse/PRO-342
+Zambia,ZMB,Activo,eVisa,ID 23,,,178,28,P3,Activo,zmb_transit,2025-10-24,,https://visagov.atlassian.net/browse/PRO-342
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Activo,zwe_double,2025-11-06,2026-02-25,https://visagov.atlassian.net/browse/PRO-1010
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Activo,zwe_kaza,2025-11-06,2026-01-05,https://visagov.atlassian.net/browse/PRO-696
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Activo,zwe_multiple,2025-11-06,2026-01-05,https://visagov.atlassian.net/browse/PRO-696
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Activo,zwe_single,2025-11-06,2026-01-05,https://visagov.atlassian.net/browse/PRO-696
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Inactivo,zwe_tourist_double,,,
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Inactivo,zwe_tourist_kaza,,,
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Inactivo,zwe_tourist_single,,,
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Inactivo,zwe_transit_double,,,
+Zimbabue,ZWE,Activo,eVisa,ID 24,,,165,29,P3,Inactivo,zwe_transit_single,,,
