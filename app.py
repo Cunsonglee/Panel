@@ -1,92 +1,145 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime, timedelta
 
-# 设置页面配置
-st.set_page_config(page_title="Panel de Control - Lee", layout="wide")
+# 页面配置
+st.set_page_config(page_title="Panel de Control v2", layout="wide")
 
-# 读取新上传的 Excel 数据
+# 加载数据
 @st.cache_data
 def load_data():
-    file_path = "Merged_Countries_Vista-v2.xlsx"
-    # 读取 Excel 文件
-    df = pd.read_excel(file_path)
-    # 确保状态列统一为小写，方便逻辑判断
-    if 'Estado' in df.columns:
-        df['Estado'] = df['Estado'].astype(str).str.lower()
+    df = pd.read_excel('Merged_Countries_Vista-v2.xlsx')
+    # 日期转换
+    date_cols = ['Actualización Completo', 'Actualización regla']
+    for col in date_cols:
+        df[col] = pd.to_datetime(df[col], errors='coerce')
+    # 状态统一处理
+    df['Estado_País'] = df['Estado_País'].fillna('Inactivo').astype(str)
+    df['Estado_Producto'] = df['Estado_Producto'].fillna('Inactivo').astype(str)
     return df
 
 df = load_data()
 
-# 侧边栏导航
-st.sidebar.title("导航栏")
-page = st.sidebar.radio("选择页面", ["Resumen", "Paises", "Productos", "Prioridad"])
+# 侧边栏菜单
+menu = st.sidebar.radio("Menu", ["Paises", "Productos", "Resumen", "Prioridad"])
 
-# --- 1. Resumen 页面 ---
-if page == "Resumen":
-    st.title("📊 总览 (Resumen)")
+# --- 1. Paises 页面 ---
+if menu == "Paises":
+    st.title("🌍 Paises - 国家维度统计")
     
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        st.metric("总产品数", len(df))
-    with col2:
-        activos = len(df[df['Estado'] == 'activo']) if 'Estado' in df.columns else 0
-        st.metric("在线产品 (Activo)", activos)
-    with col3:
-        inactivos = len(df[df['Estado'] == 'inactivo']) if 'Estado' in df.columns else 0
-        st.metric("下线产品 (Inactivo)", inactivos)
-
-    st.subheader("数据预览")
-    st.dataframe(df.head(20), use_container_width=True)
-
-# --- 2. Paises 页面 ---
-elif page == "Paises":
-    st.title("🌍 国家状态统计 (Paises)")
+    # 筛选器
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        selected_countries = st.multiselect("选择国家", options=df['País'].unique())
+    with col_f2:
+        status_filter = st.multiselect("国家状态 (Estado País)", options=df['Estado_País'].unique())
     
-    if 'Pais' in df.columns and 'Estado' in df.columns and 'Producto' in df.columns:
-        # 按国家分组，并统计 activo 和 inactivo 的产品数量
-        pais_stats = df.groupby('Pais').apply(lambda x: pd.Series({
-            'Activos': (x['Estado'] == 'activo').sum(),
-            'Inactivos': (x['Estado'] == 'inactivo').sum(),
-            'Total Productos': len(x)
-        })).reset_index()
+    # 应用筛选
+    df_p = df.copy()
+    if selected_countries:
+        df_p = df_p[df_p['País'].isin(selected_countries)]
+    if status_filter:
+        df_p = df_p[df_p['Estado_País'].isin(status_filter)]
+    
+    # 统计数据逻辑
+    stats = df_p.groupby(['País', 'ISO3', 'Estado_País']).apply(lambda x: pd.Series({
+        'Activos': (x['Estado_Producto'].str.lower() == 'activo').sum(),
+        'Inactivos': (x['Estado_Producto'].str.lower() == 'inactivo').sum()
+    })).reset_index()
+
+    # 顶部指标
+    st.divider()
+    m1, m2, m3 = st.columns(3)
+    m1.metric("总国家数量", len(df['País'].unique()))
+    m2.metric("激活国家 (Activo País)", len(df[df['Estado_País'].str.lower() == 'activo']['País'].unique()))
+    m3.metric("激活产品总数 (Activo Producto)", (df['Estado_Producto'].str.lower() == 'activo').sum())
+    
+    # 展示列表
+    st.subheader("国家详细列表")
+    st.dataframe(stats, use_container_width=True, hide_index=True)
+
+# --- 2. Productos 页面 ---
+elif menu == "Productos":
+    st.title("📦 Productos - 产品维度详情")
+    
+    # 筛选器
+    col_f1, col_f2 = st.columns(2)
+    with col_f1:
+        p_country_filter = st.multiselect("筛选国家", options=df['País'].unique())
+    with col_f2:
+        p_status_filter = st.multiselect("产品状态 (Estado Producto)", options=df['Estado_Producto'].unique())
+    
+    # 应用筛选
+    df_prod = df.copy()
+    if p_country_filter:
+        df_prod = df_prod[df_prod['País'].isin(p_country_filter)]
+    if p_status_filter:
+        df_prod = df_prod[df_prod['Estado_Producto'].isin(p_status_filter)]
         
-        st.write("以下是根据国家统计的产品状态分布：")
-        st.dataframe(pais_stats.sort_values(by='Activos', ascending=False), use_container_width=True)
-        
-        # 搜索特定国家
-        search_pais = st.selectbox("选择或搜索国家查看详情", ["所有"] + list(df['Pais'].unique()))
-        if search_pais != "所有":
-            filtered_df = df[df['Pais'] == search_pais]
-            st.write(f"### {search_pais} 的产品详情")
-            st.table(filtered_df[['Producto', 'Estado', 'Prioridad']])
-    else:
-        st.error("表格中缺少 'Pais', 'Estado' 或 'Producto' 列，请检查 Excel 文件。")
+    # 顶部指标
+    st.divider()
+    pm1, pm2, pm3 = st.columns(3)
+    pm1.metric("总产品数量", len(df_prod))
+    pm2.metric("激活产品数", (df_prod['Estado_Producto'].str.lower() == 'activo').sum())
+    pm3.metric("下线产品数", (df_prod['Estado_Producto'].str.lower() == 'inactivo').sum())
+    
+    # 展示列表
+    st.subheader("产品详情清单")
+    display_cols = ['Producto', 'País', 'Estado_País', 'Estado_Producto', 
+                    'Actualización Completo', 'Actualización regla', 'Nota_Producto']
+    st.dataframe(df_prod[display_cols], use_container_width=True, hide_index=True)
 
-# --- 3. Productos 页面 ---
-elif page == "Productos":
-    st.title("📦 产品详情 (Productos)")
+# --- 3. Resumen 页面 ---
+elif menu == "Resumen":
+    st.title("📊 Resumen - 更新与预警")
     
-    # 过滤器
-    search_query = st.text_input("搜索产品名称 (Producto)")
-    status_filter = st.multiselect("筛选状态", options=df['Estado'].unique(), default=df['Estado'].unique())
+    six_months_ago = datetime.now() - timedelta(days=180)
     
-    filtered_df = df[df['Estado'].isin(status_filter)]
-    if search_query:
-        filtered_df = filtered_df[filtered_df['Producto'].str.contains(search_query, case=False, na=False)]
+    # 1 & 2. 预警部分
+    col_w1, col_w2 = st.columns(2)
+    with col_w1:
+        st.subheader("⚠️ Regla 逾期 (6个月未更新或无日期)")
+        overdue_regla = df[(df['Actualización regla'] < six_months_ago) | (df['Actualización regla'].isna())]
+        st.write(f"共计: {len(overdue_regla)}")
+        st.dataframe(overdue_regla[['Producto', 'País', 'Actualización regla']], height=200)
+        
+    with col_w2:
+        st.subheader("⚠️ Completo 逾期 (6个月未更新或无日期)")
+        overdue_comp = df[(df['Actualización Completo'] < six_months_ago) | (df['Actualización Completo'].isna())]
+        st.write(f"共计: {len(overdue_comp)}")
+        st.dataframe(overdue_comp[['Producto', 'País', 'Actualización Completo']], height=200)
+
+    st.divider()
     
-    st.dataframe(filtered_df, use_container_width=True)
+    # 3 & 4. 季度更新统计
+    st.subheader("📅 季度更新趋势")
+    
+    # 准备季度数据
+    df['Q_Regla'] = df['Actualización regla'].dt.to_period('Q').astype(str)
+    df['Q_Completo'] = df['Actualización Completo'].dt.to_period('Q').astype(str)
+    
+    all_quarters = sorted(list(set(df['Q_Regla'].unique()) | set(df['Q_Completo'].unique())))
+    all_quarters = [q for q in all_quarters if q != 'NaT']
+    
+    selected_q = st.selectbox("筛选季度", options=["全部"] + all_quarters)
+    
+    q_col1, q_col2 = st.columns(2)
+    
+    with q_col1:
+        st.markdown("**Regla 更新分布**")
+        regla_counts = df['Q_Regla'].value_counts().reset_index()
+        if selected_q != "全部":
+            regla_counts = regla_counts[regla_counts['Q_Regla'] == selected_q]
+        st.bar_chart(regla_counts.set_index('Q_Regla'))
+        
+    with q_col2:
+        st.markdown("**Completo 更新分布**")
+        comp_counts = df['Q_Completo'].value_counts().reset_index()
+        if selected_q != "全部":
+            comp_counts = comp_counts[comp_counts['Q_Completo'] == selected_q]
+        st.bar_chart(comp_counts.set_index('Q_Completo'))
 
 # --- 4. Prioridad 页面 ---
-elif page == "Prioridad":
-    st.title("⚡ 优先级排序 (Prioridad)")
-    
-    if 'Prioridad' in df.columns:
-        # 按优先级排序，通常假设数字越小或特定等级越高
-        sort_order = st.selectbox("排序方式", ["高到低", "低到高"])
-        ascending = True if sort_order == "低到高" else False
-        
-        priority_df = df.sort_values(by='Prioridad', ascending=ascending)
-        st.write("根据优先级排列的产品列表：")
-        st.dataframe(priority_df[['Prioridad', 'Producto', 'Pais', 'Estado']], use_container_width=True)
-    else:
-        st.error("表格中未找到 'Prioridad' 列。")
+elif menu == "Prioridad":
+    st.title("⚡ Prioridad")
+    st.info("该模块内容暂未发布，敬请期待。")
