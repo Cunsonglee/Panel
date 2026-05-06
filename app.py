@@ -9,13 +9,13 @@ st.set_page_config(page_title="Panel de Control v2", layout="wide")
 @st.cache_data
 def load_data():
     # 使用您提供的新文件名
-    file_name = 'Merged_Countries_Vista-v2.xlsx'
+    file_name = 'Merged_Countries_Vista-v2_2.xlsx'
     df = pd.read_excel(file_name)
     
-    # 强制转换日期
+    # 强制转换日期并去除时间部分 (只保留日期)
     date_cols = ['Actualización Completo', 'Actualización regla']
     for col in date_cols:
-        df[col] = pd.to_datetime(df[col], errors='coerce')
+        df[col] = pd.to_datetime(df[col], errors='coerce').dt.date  # 关键修改：添加 .dt.date
     
     # 清洗关键列，确保为字符串且无空字符
     df['País'] = df['País'].astype(str).str.strip()
@@ -34,7 +34,6 @@ menu = st.sidebar.radio("Menu", ["Paises", "Productos", "Resumen", "Prioridad"])
 if menu == "Paises":
     st.title("🌍 Paises - 国家维度统计")
     
-    # 提取所有唯一的国家名（过滤掉无效值）
     valid_countries = sorted([c for c in df_raw['País'].unique() if pd.notna(c) and str(c).lower() != 'nan'])
     valid_status = sorted([s for s in df_raw['Estado_País'].unique() if pd.notna(s) and str(s).lower() != 'nan'])
     
@@ -44,10 +43,7 @@ if menu == "Paises":
     with col_f2:
         status_filter = st.multiselect("国家状态筛选", options=valid_status)
     
-    # 统计逻辑：按国家分组
-    # 确保即使产品名为 'nan' 或为空，也能保留国家行
     def get_stats(group):
-        # 只有当产品名不是 'nan' 且不为空时才计入数量
         has_prod = (group['Producto'].notna()) & (group['Producto'].str.lower() != 'nan')
         activos = (has_prod & (group['Estado_Producto'].str.lower() == 'activo')).sum()
         inactivos = (has_prod & (group['Estado_Producto'].str.lower() == 'inactivo')).sum()
@@ -55,13 +51,11 @@ if menu == "Paises":
 
     stats = df_raw.groupby(['País', 'ISO3', 'Estado_País']).apply(get_stats).reset_index()
 
-    # 应用筛选器
     if selected_countries:
         stats = stats[stats['País'].isin(selected_countries)]
     if status_filter:
         stats = stats[stats['Estado_País'].isin(status_filter)]
     
-    # 顶部全局指标
     st.divider()
     m1, m2, m3 = st.columns(3)
     m1.metric("总国家数", len(df_raw['País'].unique()))
@@ -69,14 +63,12 @@ if menu == "Paises":
     m3.metric("全系统激活产品总数", ((df_raw['Estado_Producto'].str.lower() == 'activo') & (df_raw['Producto'].notna()) & (df_raw['Producto'].str.lower() != 'nan')).sum())
     
     st.subheader("国家状态列表 (全部展示)")
-    # height=1000 确保列表能够完整显示在页面上
     st.dataframe(stats, use_container_width=True, hide_index=True, height=1000)
 
 # --- 2. Productos 页面 ---
 elif menu == "Productos":
     st.title("📦 Productos - 产品维度详情")
     
-    # 基础过滤：只显示有实际产品的行
     df_prod_base = df_raw[df_raw['Producto'].notna() & (df_raw['Producto'].str.lower() != 'nan')].copy()
     
     all_countries_p = sorted([str(c) for c in df_prod_base['País'].unique() if pd.notna(c)])
@@ -100,7 +92,6 @@ elif menu == "Productos":
     pm3.metric("下线产品", (df_prod_base['Estado_Producto'].str.lower() == 'inactivo').sum())
     
     st.subheader("产品清单 (全部展示)")
-    # 按照您的要求调换顺序：Producto 在前，País 在后
     display_cols = ['Producto', 'País', 'Estado_País', 'Estado_Producto', 
                     'Actualización Completo', 'Actualización regla', 'Nota_Producto']
     st.dataframe(df_prod_base[display_cols], use_container_width=True, hide_index=True, height=1000)
@@ -109,13 +100,15 @@ elif menu == "Productos":
 elif menu == "Resumen":
     st.title("📊 Resumen - 更新状态汇总")
     
-    # 只统计有效产品
     df_res = df_raw[df_raw['Producto'].notna() & (df_raw['Producto'].str.lower() != 'nan')].copy()
-    six_months_ago = datetime.now() - timedelta(days=180)
+    # 这里的比较逻辑需要稍微调整，因为现在 df_res 里的列是 date 对象
+    today = datetime.now().date()
+    six_months_ago = today - timedelta(days=180)
     
     col_w1, col_w2 = st.columns(2)
     with col_w1:
         st.subheader("⚠️ Regla 逾期 (6个月未更)")
+        # 即使列是 date 类型，也可以直接与 date 对象比较
         overdue_regla = df_res[(df_res['Actualización regla'] < six_months_ago) | (df_res['Actualización regla'].isna())]
         st.write(f"数量: {len(overdue_regla)}")
         st.dataframe(overdue_regla[['Producto', 'País', 'Actualización regla']], use_container_width=True, hide_index=True, height=400)
@@ -128,11 +121,11 @@ elif menu == "Resumen":
 
     st.divider()
     
-    # 季度更新趋势 (稳定版)
     st.subheader("📅 季度更新趋势")
     
-    df_res['Q_Regla'] = df_res['Actualización regla'].apply(lambda x: x.to_period('Q').strftime('%YQ%q') if pd.notna(x) else None)
-    df_res['Q_Completo'] = df_res['Actualización Completo'].apply(lambda x: x.to_period('Q').strftime('%YQ%q') if pd.notna(x) else None)
+    # 将 date 对象重新转为 period 统计
+    df_res['Q_Regla'] = pd.to_datetime(df_res['Actualización regla']).dt.to_period('Q').apply(lambda x: x.strftime('%YQ%q') if pd.notna(x) else None)
+    df_res['Q_Completo'] = pd.to_datetime(df_res['Actualización Completo']).dt.to_period('Q').apply(lambda x: x.strftime('%YQ%q') if pd.notna(x) else None)
     
     qs_regla = [str(q) for q in df_res['Q_Regla'].dropna().unique()]
     qs_comp = [str(q) for q in df_res['Q_Completo'].dropna().unique()]
