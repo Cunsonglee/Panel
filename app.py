@@ -9,7 +9,7 @@ st.set_page_config(page_title="Panel de Control v2", layout="wide")
 @st.cache_data
 def load_data():
     # 使用您提供的新文件名
-    file_name = 'Merged_Countries_Vista-v2_2.xlsx'
+    file_name = 'Merged_Countries_Vista-v2.xlsx'
     df = pd.read_excel(file_name)
     
     # 强制转换日期并去除时间部分 (只保留日期)
