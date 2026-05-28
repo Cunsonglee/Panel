@@ -323,8 +323,8 @@ elif menu == "Prioridad":
     # 3. 完美绑定：您提供的真实列名
     # =========================================================================
     COL_A = 'País'                             # 对应用于条件分组（SUMAR.SI / CONTAR.SI）的列
-    COL_I = 'K (Conversión %)'                 # 公式1的 I 输入
-    COL_J = 'P (Point)'                        # 公式1的 J 输入（注意：公式1会产出全新的COL_P，不要冲突）
+    COL_I = 'O (Pedidos)'                 # 公式1的 I 输入
+    COL_J = 'K (Conversión %)'                        # 公式1的 J 输入（注意：公式1会产出全新的COL_P，不要冲突）
     COL_K = 'E (Extra Keys)'                   # 公式1的 K 输入
     COL_L = 'F (Documentos)'                   # 公式1的 L 输入
     COL_M = 'L (Lógica Dinámica)'              # 公式1的 M 输入
