@@ -57,6 +57,220 @@ def get_display_df(df_input):
             display_df[col] = display_df[col].dt.strftime('%d-%m-%Y').fillna("")
     return display_df
 
+# -------------------------------------------------------------------------
+# 【全球国家多语言/ISO3智能映射字典】
+# -------------------------------------------------------------------------
+def get_country_aliases(country_name, iso3):
+    """根据输入的国家名和ISO3，返回可能出现在Jira Resumen里的多语言别名列表"""
+    name_clean = str(country_name).strip().lower()
+    iso_clean = str(iso3).strip().lower()
+    
+    # 基础别名池，把当前名字和ISO加入
+    aliases = {name_clean, iso_clean}
+    
+    # 全球国家英文/西班牙语/中文跨语言字典
+    translation_book = {
+        "afg": ["afghanistan", "afganistán", "阿富汗"],
+        "ago": ["angola", "angola", "安哥拉"],
+        "alb": ["albania", "albania", "阿尔巴尼亚"],
+        "are": ["united arab emirates", "emiratos árabes unidos", "阿拉伯联合酋长国", "uae", "阿联酋"],
+        "arg": ["argentina", "argentina", "阿根廷"],
+        "arm": ["armenia", "armenia", "亚美尼亚"],
+        "aus": ["australia", "australia", "澳大利亚"],
+        "aut": ["austria", "austria", "奥地利"],
+        "aze": ["azerbaijan", "azerbaiyán", "阿塞拜疆"],
+        "bdi": ["burundi", "burundi", "布隆迪"],
+        "bel": ["belgium", "bélgica", "比利时"],
+        "ben": ["benin", "benín", "贝宁"],
+        "bfa": ["burkina faso", "burkina faso", "布基纳法索"],
+        "bgd": ["bangladesh", "bangladesh", "孟加拉国"],
+        "bgr": ["bulgaria", "bulgaria", "保加利亚"],
+        "bhr": ["bahrain", "bahréin", "巴林"],
+        "bhs": ["bahamas", "bahamas", "巴哈马"],
+        "bih": ["bosnia and herzegovina", "bosnia y herzegovina", "波斯尼亚和黑塞哥维那", "波黑"],
+        "blr": ["belarus", "bielorrusia", "白俄罗斯"],
+        "blz": ["belize", "belice", "伯利兹"],
+        "bol": ["bolivia", "bolivia", "玻利维亚"],
+        "bra": ["brazil", "brasil", "巴西"],
+        "brb": ["barbados", "barbados", "巴巴多斯"],
+        "brn": ["brunei", "brunéi", "文莱"],
+        "btn": ["bhutan", "bután", "不丹"],
+        "bwa": ["botswana", "botsuana", "博茨瓦纳"],
+        "caf": ["central african republic", "república centroafricana", "中非共和国", "中非"],
+        "can": ["canada", "canadá", "加拿大"],
+        "che": ["switzerland", "suiza", "瑞士"],
+        "chl": ["chile", "chile", "智利"],
+        "chn": ["china", "china", "中国"],
+        "civ": ["cote d'ivoire", "ivory coast", "costa de marfil", "科特迪瓦"],
+        "cmr": ["cameroon", "camerún", "喀麦隆"],
+        "cod": ["democratic republic of the congo", "república democrática del congo", "刚果（金）", "drc"],
+        "cog": ["congo", "congo", "刚果（布）"],
+        "col": ["colombia", "colombia", "哥伦比亚"],
+        "com": ["comoros", "comoras", "科摩罗"],
+        "cpv": ["cape verde", "cabo verde", "佛得角"],
+        "cri": ["costa rica", "costa rica", "哥斯达黎加"],
+        "cub": ["cuba", "cuba", "古巴"],
+        "cyp": ["cyprus", "chipre", "塞浦路斯"],
+        "cze": ["czech republic", "czechia", "república checa", "捷克"],
+        "deu": ["germany", "alemania", "德国"],
+        "dji": ["djibouti", "yibuti", "吉布提"],
+        "dma": ["dominica", "dominica", "多米尼克"],
+        "dnk": ["denmark", "dinamarca", "丹麦"],
+        "dom": ["dominican republic", "república dominicana", "多米尼加共和国", "多米尼加"],
+        "dza": ["algeria", "argelia", "阿尔及利亚"],
+        "ecu": ["ecuador", "ecuador", "厄瓜多尔"],
+        "egy": ["egypt", "egipto", "埃及"],
+        "eri": ["eritrea", "eritrea", "厄立特里亚"],
+        "esp": ["spain", "españa", "西班牙"],
+        "est": ["estonia", "estonia", "爱沙尼亚"],
+        "eth": ["ethiopia", "etiopía", "埃塞俄比亚"],
+        "fin": ["finland", "finlandia", "芬兰"],
+        "fji": ["fiji", "fiyi", "斐济"],
+        "fra": ["france", "francia", "法国"],
+        "fsm": ["micronesia", "micronesia", "密克罗尼西亚"],
+        "gab": ["gabon", "gabón", "加蓬"],
+        "gbr": ["united kingdom", "reino unido", "英国", "uk", "england"],
+        "geo": ["georgia", "georgia", "格鲁吉亚"],
+        "gha": ["ghana", "ghana", "加纳"],
+        "gin": ["guinea", "guinea", "几内亚"],
+        "gmb": ["gambia", "gambia", "冈比亚"],
+        "gnb": ["guinea-bissau", "guinea-bisáu", "几内亚比绍"],
+        "gnq": ["equatorial guinea", "guinea ecuatorial", "赤道几内亚"],
+        "grc": ["greece", "grecia", "希腊"],
+        "grd": ["grenada", "granada", "格林纳达"],
+        "gtm": ["guatemala", "guatemala", "危地马拉"],
+        "guy": ["guyana", "guyana", "圭亚那"],
+        "hnd": ["honduras", "honduras", "洪都拉斯"],
+        "hrv": ["croatia", "croacia", "克罗地亚"],
+        "hti": ["haiti", "haití", "海地"],
+        "hun": ["hungary", "hungría", "匈牙利"],
+        "idn": ["indonesia", "indonesia", "印度尼西亚", "印尼"],
+        "ind": ["india", "india", "印度"],
+        "irl": ["ireland", "irlanda", "爱尔兰"],
+        "irn": ["iran", "irán", "伊朗"],
+        "irq": ["iraq", "irak", "伊拉克"],
+        "isl": ["iceland", "islandia", "冰岛"],
+        "isr": ["israel", "israel", "以色列"],
+        "ita": ["italy", "italia", "意大利"],
+        "jam": ["jamaica", "jamaica", "牙买加"],
+        "jor": ["jordan", "jordania", "约旦"],
+        "jpn": ["japan", "japón", "日本"],
+        "kaz": ["kazakhstan", "kazajistán", "哈萨克斯坦"],
+        "ken": ["kenya", "kenia", "肯尼亚"],
+        "kgz": ["kyrgyzstan", "kirguistán", "吉尔吉斯斯坦"],
+        "khm": ["cambodia", "camboya", "柬埔寨"],
+        "kir": ["kiribati", "kiribati", "基里巴斯"],
+        "kna": ["saint kitts and nevis", "san cristóbal y nieves", "圣基茨和尼维斯"],
+        "kor": ["south korea", "corea del sur", "韩国", "korea", "korea, south"],
+        "kwt": ["kuwait", "kuwait", "科威特"],
+        "lao": ["laos", "laos", "老挝"],
+        "lbn": ["lebanon", "líbano", "黎巴嫩"],
+        "lbr": ["liberia", "liberia", "利比里亚"],
+        "lby": ["libya", "libia", "利比亚"],
+        "lca": ["saint lucia", "santa lucía", "圣卢西亚"],
+        "lie": ["liechtenstein", "liechtenstein", "列支敦士登"],
+        "lka": ["sri lanka", "sri lanka", "斯里兰卡"],
+        "lso": ["lesotho", "lesoto", "莱索托"],
+        "ltu": ["lithuania", "lituania", "立陶宛"],
+        "lux": ["luxembourg", "luxemburgo", "卢森堡"],
+        "lva": ["latvia", "letonia", "拉脱维亚"],
+        "mar": ["morocco", "marruecos", "摩洛哥"],
+        "mco": ["monaco", "mónaco", "摩纳哥"],
+        "mda": ["moldova", "moldavia", "摩尔多瓦"],
+        "mdg": ["madagascar", "madagascar", "马达加斯加"],
+        "mdv": ["maldives", "maldivas", "马尔代夫"],
+        "mex": ["mexico", "méxico", "墨西哥"],
+        "mhl": ["marshall islands", "islas marshall", "马绍尔群岛"],
+        "mkd": ["north macedonia", "macedonia del norte", "北马其顿"],
+        "mli": ["mali", "malí", "马里"],
+        "mlt": ["malta", "malta", "马耳他"],
+        "mmr": ["myanmar", "birmania", "缅甸"],
+        "mne": ["montenegro", "montenegro", "黑山"],
+        "mng": ["mongolia", "mongolia", "蒙古"],
+        "moz": ["mozambique", "mozambique", "莫桑比克"],
+        "mrt": ["mauritania", "mauritania", "毛里塔尼亚"],
+        "mus": ["mauritius", "mauricio", "毛里求斯"],
+        "mwi": ["malawi", "malaui", "马拉维"],
+        "mys": ["malaysia", "malasia", "马来西亚"],
+        "nam": ["namibia", "namibia", "纳米比亚"],
+        "ner": ["niger", "níger", "尼日尔"],
+        "nga": ["nigeria", "nigeria", "尼日利亚"],
+        "nic": ["nicaragua", "nicaragua", "尼加拉瓜"],
+        "nld": ["netherlands", "países bajos", "荷兰", "holanda"],
+        "nor": ["norway", "noruega", "挪威"],
+        "npl": ["nepal", "nepal", "尼泊尔"],
+        "nru": ["nauru", "nauru", "瑙鲁"],
+        "nzl": ["new zealand", "nueva zelanda", "新西兰"],
+        "omn": ["oman", "omán", "阿曼"],
+        "pak": ["pakistan", "pakistán", "巴基斯坦"],
+        "pan": ["panama", "panamá", "巴拿马"],
+        "per": ["peru", "perú", "秘鲁"],
+        "phl": ["philippines", "filipinas", "菲律宾"],
+        "plw": ["palau", "palaos", "帕劳"],
+        "png": ["papua new guinea", "papúa nueva guinea", "巴布亚新几内亚"],
+        "pol": ["poland", "polonia", "波兰"],
+        "prk": ["north korea", "corea del norte", "朝鲜", "dprk"],
+        "prt": ["portugal", "portugal", "葡萄牙"],
+        "pry": ["paraguay", "paraguay", "巴拉圭"],
+        "qat": ["qatar", "catar", "卡塔尔"],
+        "rou": ["romania", "rumania", "罗马尼亚"],
+        "rus": ["russia", "rusia", "俄罗斯"],
+        "rwa": ["rwanda", "ruanda", "卢旺达"],
+        "sau": ["saudi arabia", "arabia saudita", "沙特阿拉伯", "沙特"],
+        "sdn": ["sudan", "sudán", "苏丹"],
+        "sen": ["senegal", "senegal", "塞内加尔"],
+        "sgp": ["singapore", "singapur", "新加坡"],
+        "slb": ["solomon islands", "islas salomón", "所罗门群岛"],
+        "sle": ["sierra leone", "sierra leona", "塞拉利昂"],
+        "slv": ["el salvador", "el salvador", "萨尔瓦多"],
+        "smr": ["san marino", "san marino", "圣马力诺"],
+        "som": ["somalia", "somalia", "索马里"],
+        "srb": ["serbia", "serbia", "塞尔维亚"],
+        "ssd": ["south sudan", "sudán del sur", "南苏丹"],
+        "stp": ["sao tome and principe", "santo tomé y príncipe", "圣多美和普林西比"],
+        "sur": ["suriname", "surinam", "苏里南"],
+        "svk": ["slovakia", "eslovaquia", "斯洛伐克"],
+        "svn": ["slovenia", "eslovenia", "斯洛文尼亚"],
+        "swe": ["sweden", "suecia", "瑞典"],
+        "swz": ["eswatini", "esuatini", "swaziland", "斯威士兰"],
+        "syc": ["seychelles", "seychelles", "塞舌尔"],
+        "syr": ["syria", "siria", "叙利亚"],
+        "tcd": ["chad", "chad", "乍得"],
+        "tgo": ["togo", "togo", "多哥"],
+        "tha": ["thailand", "tailandia", "泰国"],
+        "tjk": ["tajikistan", "tayikistán", "塔吉克斯坦"],
+        "tkm": ["turkmenistan", "turkmenistán", "土库曼斯坦"],
+        "tls": ["timor-leste", "timor oriental", "东帝汶"],
+        "ton": ["tonga", "tonga", "汤加"],
+        "tto": ["trinidad and tobago", "trinidad y tobago", "特立尼达和多巴哥"],
+        "tun": ["tunisia", "túnez", "突尼斯"],
+        "tur": ["turkey", "turquía", "土耳其"],
+        "tuv": ["tuvalu", "tuvalu", "图瓦卢"],
+        "twn": ["taiwan", "taiwán", "台湾"],
+        "tza": ["tanzania", "tanzania", "坦桑尼亚"],
+        "uga": ["uganda", "uganda", "乌干达"],
+        "ukr": ["ukraine", "ucrania", "乌克兰"],
+        "ury": ["uruguay", "uruguay", "乌拉圭"],
+        "usa": ["united states", "estados unidos", "美国", "usa"],
+        "uzb": ["uzbekistan", "uzbekistán", "乌兹别克斯坦"],
+        "vat": ["vatican city", "ciudad del vaticano", "梵蒂冈"],
+        "vct": ["saint vincent and the grenadines", "san vicente y las granadinas", "圣文森特和格林纳丁斯"],
+        "ven": ["venezuela", "venezuela", "委内瑞拉"],
+        "vnm": ["vietnam", "vietnam", "越南"],
+        "vut": ["vanuatu", "vanuatu", "瓦努阿图"],
+        "wsm": ["samoa", "samoa", "萨摩亚"],
+        "yem": ["yemen", "yemen", "也门"],
+        "zaf": ["south africa", "sudáfrica", "南非"],
+        "zmb": ["zambia", "zambia", "赞比亚"],
+        "zwe": ["zimbabwe", "zimbabue", "津巴布韦"]
+    }
+    
+    if iso_clean in translation_book:
+        aliases.update(translation_book[iso_clean])
+        
+    # 返回有效的名称列表
+    return [a for a in aliases if a and a != 'nan']
+
 # 侧边栏菜单导航
 menu = st.sidebar.radio("Menú", ["Países", "Productos", "Resumen", "Prioridad"])
 
@@ -119,12 +333,11 @@ elif menu == "Productos":
     st.title("📦 Productos - Detalles por Producto")
     
     # -------------------------------------------------------------------------
-    # 【上传 Jira 文件自动更新模块】
+    # 【上传 Jira 文件自动更新模块】带全球国家多语言识别
     # -------------------------------------------------------------------------
     st.markdown("### 📥 Sincronización Automática con Jira")
     uploaded_file = st.file_uploader("请上传由 Jira 导出的 CSV（分号分隔）或 Excel 文件：", type=["csv", "xlsx"])
     
-    # 使用 Session State 记录被 Jira 更新的（国家，产品）键值对
     if 'modified_rows' not in st.session_state:
         st.session_state.modified_rows = []
 
@@ -132,43 +345,57 @@ elif menu == "Productos":
         try:
             # 自动识别格式并读取
             if uploaded_file.name.endswith('.csv'):
-                jira_df = pd.read_csv(uploaded_file, sep=None, engine='python')
+                # 处理你提供的用分号(;)分割的 Jira CSV 文件
+                jira_df = pd.read_csv(uploaded_file, sep=';', engine='python')
             else:
                 jira_df = pd.read_excel(uploaded_file)
             
             # 清洗列标题的空格
             jira_df.columns = jira_df.columns.str.strip()
             
-            # 检查 Jira 核心必备列
-            required_jira_cols = ['Clave de incidencia', 'Actualizada', 'Resumen', 'ID de la incidencia']
-            if all(col in jira_df.columns for col in required_jira_cols):
+            # 兼容读取 Clave de incidencia
+            actual_cols = jira_df.columns.tolist()
+            clave_col = 'Clave de incidencia' if 'Clave de incidencia' in actual_cols else ('Clave de incidence' if 'Clave de incidence' in actual_cols else None)
+            
+            if clave_col and 'Actualizada' in actual_cols and 'Resumen' in actual_cols and 'ID de la incidencia' in actual_cols:
                 
-                if st.button("⚡ 预解析并执行 Jira 规则匹配"):
+                if st.button("⚡ 预解析并执行多语言 Jira 规则匹配"):
                     st.session_state.modified_rows = [] # 重置上一次的修改高亮标记
                     
                     # 遍历我们主表格数据库（Priority (1).xlsx）里的每一行
                     for index, row in st.session_state.df.iterrows():
                         p_name = str(row['Producto']).strip()
                         c_name = str(row['País']).strip()
+                        iso3_val = str(row['ISO3']).strip() if 'ISO3' in row else ""
                         
                         if pd.isna(row['Producto']) or p_name == 'nan':
                             continue
                         
-                        # 第一步：根据国家名称过滤 Jira 任务（因为 Resumen 里总有国家名）
-                        matched_jira = jira_df[
-                            jira_df['Resumen'].astype(str).str.contains(c_name, case=False, na=False)
-                        ]
+                        # -----------------------------------------------------
+                        # 核心多语言匹配调用
+                        # -----------------------------------------------------
+                        country_aliases = get_country_aliases(c_name, iso3_val)
+                        
+                        matched_jira = pd.DataFrame()
+                        for alias in country_aliases:
+                            # 使用正则避免匹配错乱 (例如印尼 Indonesia 不会被 India 错误捕获)
+                            temp_match = jira_df[
+                                jira_df['Resumen'].astype(str).str.contains(r'\b' + alias + r'\b|' + alias, case=False, na=False)
+                            ]
+                            if not temp_match.empty:
+                                matched_jira = temp_match
+                                break
                         
                         if not matched_jira.empty:
                             # 拿到最上面最新的一条 Jira 任务
                             jira_row = matched_jira.iloc[0]
                             
-                            # 提取并解析更新日期（形如 28/05/2026 7:54 提取前段日期）
+                            # 提取并解析更新日期
                             raw_date = str(jira_row['Actualizada']).split()[0]
                             parsed_date = pd.to_datetime(raw_date, dayfirst=True, errors='coerce')
                             
                             # 自动生成固定的 Atlassian 任务超链接
-                            clave = str(jira_row['Clave de incidencia']).strip()
+                            clave = str(jira_row[clave_col]).strip()
                             new_link = f"https://visagov.atlassian.net/browse/{clave}"
                             
                             # 获取 ID de la incidencia 值用于规则判定
@@ -189,9 +416,9 @@ elif menu == "Productos":
                             # 将被修改的这行存入高亮置顶缓存
                             st.session_state.modified_rows.append((c_name, p_name))
                             
-                    st.success(f"🎉 成功完成规则筛选！共发现 {len(st.session_state.modified_rows)} 项数据变更，已在下方用蓝色高亮并为您置顶。请核对后点击下方 'Guardar Cambios' 保存。")
+                    st.success(f"🎉 成功完成多语言智能匹配！共发现 {len(st.session_state.modified_rows)} 项数据变更，已在下方用蓝色高亮并为您置顶。请核对后点击下方 'Guardar Cambios' 保存。")
             else:
-                st.error(f"❌ 上传的文件格式不正确。必须包含以下列名：{required_jira_cols}")
+                st.error(f"❌ 上传的文件格式不正确或缺少必要列。当前表头为：{actual_cols}")
         except Exception as e:
             st.error(f"处理文件时发生意外错误: {e}")
 
@@ -223,7 +450,7 @@ elif menu == "Productos":
     if f_c_status: df_prod = df_prod[df_prod['Estado_País'].isin(f_c_status)]
 
     # -------------------------------------------------------------------------
-    # 【置顶逻辑控制】：让被 Jira 更新修改的行，Is_Modified 为 True，并排序到最上方
+    # 【置顶逻辑控制】
     # -------------------------------------------------------------------------
     if st.session_state.modified_rows:
         df_prod['Is_Modified'] = df_prod.apply(lambda r: (str(r['País']).strip(), str(r['Producto']).strip()) in st.session_state.modified_rows, axis=1)
@@ -236,7 +463,7 @@ elif menu == "Productos":
     df_for_edit = df_prod[display_cols].copy()
     
     # -------------------------------------------------------------------------
-    # 【蓝色标记高亮样式映射：背景淡蓝，字体深蓝加粗】
+    # 【蓝色标记高亮样式映射】
     # -------------------------------------------------------------------------
     def style_blue_highlight(row):
         if row['Is_Modified'] == True:
@@ -303,10 +530,8 @@ elif menu == "Prioridad":
     st.title("⚡ Prioridad - Matriz de Prioridades Automatizada")
     st.write("根据您提供的严密嵌套公式链，系统实时在后台进行递进式矩阵运算，并默认按最终得分从大到小降序排列。")
 
-    # 1. 复制一份计算专用的 DataFrame，防止污染基础数据状态
     df_calc = st.session_state.df[st.session_state.df['Producto'].notna() & (st.session_state.df['Producto'] != 'nan')].copy()
 
-    # 2. 调节与筛选器功能（与其他界面保持一致）
     c1, c2, c3 = st.columns(3)
     with c1:
         f_country = st.multiselect("Filtrar por País", options=sorted(df_calc['País'].unique()), key="prioridad_f_country")
@@ -322,50 +547,38 @@ elif menu == "Prioridad":
     # =========================================================================
     # 3. 完美绑定：您提供的真实列名
     # =========================================================================
-    COL_A = 'País'                             # 对应用于条件分组（SUMAR.SI / CONTAR.SI）的列
-    COL_I = 'O (Pedidos)'                 # 公式1的 I 输入
-    COL_J = 'K (Conversión %)'                        # 公式1的 J 输入（注意：公式1会产出全新的COL_P，不要冲突）
-    COL_K = 'E (Extra Keys)'                   # 公式1的 K 输入
-    COL_L = 'F (Documentos)'                   # 公式1的 L 输入
-    COL_M = 'L (Lógica Dinámica)'              # 公式1的 M 输入
-    COL_N = 'S (Tipo de County details)'       # 公式1的 N 输入
-    COL_O = 'M (Impacto Precio)'               # 公式1的 O 输入
+    COL_A = 'País'                             
+    COL_I = 'O (Pedidos)'                  
+    COL_J = 'K (Conversión %)'                         
+    COL_K = 'E (Extra Keys)'                   
+    COL_L = 'F (Documentos)'                   
+    COL_M = 'L (Lógica Dinámica)'              
+    COL_N = 'S (Tipo de County details)'       
+    COL_O = 'M (Impacto Precio)'               
     
-    COL_Q = 'Última actualización parcial'      # 公式2的 Q 输入（日期时间）
-    COL_R = 'Última actualización completa'     # 公式2的 R 输入（日期时间）
+    COL_Q = 'Última actualización parcial'      
+    COL_R = 'Última actualización completa'     
     
-    COL_S_name = 'Factor de Tiempo'            # 公式2最终产出的新列名（取代原表格数值）
-    COL_T_name = 'Score Total País'            # 公式3最终产出的新列名（取代原表格数值）
-    COL_U_name = 'Cantidad Prod'               # 公式4最终产出的新列名（取代原表格数值）
+    COL_S_name = 'Factor de Tiempo'            
+    COL_T_name = 'Score Total País'            
+    COL_U_name = 'Cantidad Prod'               
     # =========================================================================
 
-    # 将涉及数字运算的列强转为数值型，防止夹杂非法字符
     input_fields = [COL_I, COL_J, COL_K, COL_L, COL_M, COL_N, COL_O]
     for col in input_fields:
         if col in df_calc.columns:
             df_calc[col] = pd.to_numeric(df_calc[col], errors='coerce').fillna(0)
 
     try:
-        # ---------------------------------------------------------------------
-        # 递进层级一：【计算公式 1 ➡ 生成全新的 COL_P】
-        # =(SI(I4=0; 0; SI(I4<=100; 1; SI(I4<=1000; 3; SI(I4<=10000; 6; 10)))) * (1 + J4)) * ((1 + SI(K4<=20; 1; ...)))
-        # ---------------------------------------------------------------------
-        cond_I = [df_calc[COL_I] == 0, df_calc[df_calc.columns[0]] == "NEVER_MATCH_THIS_STUB", df_calc[COL_I] <= 100, df_calc[COL_I] <= 1000, df_calc[COL_I] <= 10000]
-        # 修复逻辑，精准映射阶梯评分
         cond_I_actual = [df_calc[COL_I] == 0, df_calc[COL_I] <= 100, df_calc[COL_I] <= 1000, df_calc[COL_I] <= 10000]
         score_I = np.select(cond_I_actual, [0, 1, 3, 6], default=10)
         
         score_K = np.select([df_calc[COL_K] <= 20, df_calc[COL_K] <= 40], [1, 3], default=5)
         score_L = np.select([df_calc[COL_L] <= 4, df_calc[COL_L] <= 6], [2, 4], default=6)
         
-        # 算出的结果直接代表最新的 COL_P 变量 (P (Point))，不再读取表格里的原数值
         NEW_COL_P = (score_I * (1 + df_calc[COL_J])) * ((1 + score_K + score_L + df_calc[COL_M] * 5) * (df_calc[COL_N] * df_calc[COL_O]))
         df_calc['CALC_P_POINT'] = NEW_COL_P
 
-        # ---------------------------------------------------------------------
-        # 递进层级二：【计算公式 2 ➡ 生成全新的 COL_S】
-        # =(SI(R4=""; 730; HOY()-R4) * 1) + (SI(O(Q4=""; R4>Q4); SI(R4=""; 730; HOY()-R4); HOY()-Q4) * 0,3)
-        # ---------------------------------------------------------------------
         today_date = pd.to_datetime(datetime.now().date())
         
         days_R = (today_date - pd.to_datetime(df_calc[COL_R], errors='coerce')).dt.days.fillna(730)
@@ -374,37 +587,20 @@ elif menu == "Prioridad":
         condition_or = (df_calc[COL_Q].isna()) | (df_calc[COL_R] > df_calc[COL_Q])
         formula_2_sub = np.where(condition_or, days_R, days_Q)
         
-        # 计算结果直接代表最新的 COL_S (Factor de Tiempo)
         NEW_COL_S = (days_R * 1) + (formula_2_sub * 0.3)
         df_calc['CALC_S_FACTOR'] = NEW_COL_S
 
-        # ---------------------------------------------------------------------
-        # 递进层级三：【计算公式 4 ➡ 生成全新的 COL_U】
-        # =CONTAR.SI(A:A; A4)
-        # ---------------------------------------------------------------------
         NEW_COL_U = df_calc.groupby(COL_A)[COL_A].transform('count')
         df_calc['CALC_U_CANTIDAD'] = NEW_COL_U
 
-        # ---------------------------------------------------------------------
-        # 递进层级四：【计算公式 3 ➡ 生成全新的 COL_T】
-        # =SUMAR.SI(A:A; A4; P:P) ⚠️ 注意：这里的 P:P 必须使用上面刚刚算出来的全新 NEW_COL_P
-        # ---------------------------------------------------------------------
         NEW_COL_T = df_calc.groupby(COL_A)['CALC_P_POINT'].transform('sum')
         df_calc['CALC_T_SCORE'] = NEW_COL_T
 
-        # ---------------------------------------------------------------------
-        # 递进层级五：【计算公式 5 ➡ 算出最终的优先级总得分 COL_V】
-        # =T4 * (1 + LOG10(U4)) * (1 + (S4 / 90))
-        # ⚠️ 必须采用刚刚上面新鲜算出来的组件：T4 -> NEW_COL_T, U4 -> NEW_COL_U, S4 -> NEW_COL_S
-        # ---------------------------------------------------------------------
-        # 用 .clip(lower=1) 保护对数函数，避免 log10(0) 导致程序红屏崩溃
         FINAL_COL_V = df_calc['CALC_T_SCORE'] * (1 + np.log10(df_calc['CALC_U_CANTIDAD'].clip(lower=1))) * (1 + (df_calc['CALC_S_FACTOR'] / 90))
         df_calc['Final_Priority_Score'] = FINAL_COL_V
 
-        # 4. 提取需要展示给用户的最终精简列，并默认按得分从高到低（降序）排序
         df_priority_view = df_calc[['País', 'Producto', 'Final_Priority_Score']].sort_values(by='Final_Priority_Score', ascending=False)
 
-        # 5. 渲染展示表格
         st.subheader("🔥 全自动化优先级排期结果 (默认从大到小降序)")
         st.dataframe(
             df_priority_view,
