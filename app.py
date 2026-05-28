@@ -16,28 +16,33 @@ def load_data():
         # 读取从 GitHub 仓库加载的 Excel 主文件
         df = pd.read_excel(FILE_NAME)
     except FileNotFoundError:
-        st.error(f"❌ No se encontró el archivo: {FILE_NAME}")
+        st.error(f"❌ No se encontró el archivo: {file_name}")
         st.stop()
     except Exception as e:
         st.error(f"❌ Error al abrir el archivo Excel: {e}")
         st.stop()
     
     # 强制将日期列转换为 datetime 对象，以便进行日期差公式计算和日历挑选
-    date_cols = ['Actualización Completo', 'Actualización regla']
+    # 使用了你提供的新列名：'Última actualización completa' 和 'Última actualización parcial'
+    date_cols = ['Última actualización completa', 'Última actualización parcial', 'Actualización Completo', 'Actualización regla']
     for col in date_cols:
-        df[col] = pd.to_datetime(df[col], errors='coerce')
+        if col in df.columns:
+            df[col] = pd.to_datetime(df[col], errors='coerce')
     
     # 基础文本去空格清洗
-    df['País'] = df['País'].astype(str).str.strip()
-    df['Producto'] = df['Producto'].astype(str).str.strip()
+    if 'País' in df.columns:
+        df['País'] = df['País'].astype(str).str.strip()
+    if 'Producto' in df.columns:
+        df['Producto'] = df['Producto'].astype(str).str.strip()
     
     # 统一并清洗国家与产品的状态
     status_map = {'nan': 'No implementado', 'Sin Estado': 'No implementado', 'None': 'No implementado'}
     valid_options = ["Activo", "Inactivo", "No implementado"]
     
     for col in ['Estado_País', 'Estado_Producto']:
-        df[col] = df[col].astype(str).str.strip().replace(status_map).fillna('No implementado')
-        df[col] = df[col].apply(lambda x: x if x in valid_options else "No implementado")
+        if col in df.columns:
+            df[col] = df[col].astype(str).str.strip().replace(status_map).fillna('No implementado')
+            df[col] = df[col].apply(lambda x: x if x in valid_options else "No implementado")
     
     return df
 
@@ -50,7 +55,8 @@ valid_status = ["Activo", "Inactivo", "No implementado"]
 # 辅助函数：用于规范表格中的显示日期格式
 def get_display_df(df_input):
     display_df = df_input.copy()
-    for col in ['Actualización Completo', 'Actualización regla']:
+    date_cols = ['Última actualización completa', 'Última actualización parcial', 'Actualización Completo', 'Actualización regla']
+    for col in date_cols:
         if col in display_df.columns:
             display_df[col] = display_df[col].dt.strftime('%d-%m-%Y').fillna("")
     return display_df
@@ -66,9 +72,9 @@ if menu == "Países":
     
     # 实时汇总各国的国家状态及旗下活跃/不活跃产品数量
     stats = st.session_state.df.groupby(['País', 'ISO3']).apply(lambda x: pd.Series({
-        'Estado_País': x['Estado_País'].iloc[0],
-        'Activos': ((x['Estado_Producto'] == 'Activo') & (x['Producto'].notna())).sum(),
-        'Inactivos': ((x['Estado_Producto'] == 'Inactivo') & (x['Producto'].notna())).sum()
+        'Estado_País': x['Estado_País'].iloc[0] if 'Estado_País' in x.columns else "No implementado",
+        'Activos': ((x['Estado_Producto'] == 'Activo') & (x['Producto'].notna())).sum() if 'Estado_Producto' in x.columns else 0,
+        'Inactivos': ((x['Estado_Producto'] == 'Inactivo') & (x['Producto'].notna())).sum() if 'Estado_Producto' in x.columns else 0
     })).reset_index()
 
     # 动态数据过滤器
@@ -144,31 +150,37 @@ elif menu == "Productos":
 
     # 保持两列日期为原生的 datetime 对象以供编辑
     display_cols = ['País', 'Estado_País', 'Producto', 'Estado_Producto', 
-                    'Actualización Completo', 'Actualización regla', 'Nota_Producto']
+                    'Última actualización completa', 'Última actualización parcial', 'Nota_Producto']
+    
+    # 确保列存在于表格中
+    display_cols = [c for c in display_cols if c in df_prod.columns]
     df_for_edit = df_prod[display_cols].copy()
+    
+    # 建立可配置字典
+    col_config_dict = {
+        "Estado_Producto": st.column_config.SelectboxColumn("Estado Producto", options=valid_status, required=True),
+        "Última actualización completa": st.column_config.DateColumn("Última actualización completa", format="YYYY-MM-DD"),
+        "Última actualización parcial": st.column_config.DateColumn("Última actualización parcial", format="YYYY-MM-DD"),
+        "Nota_Producto": st.column_config.LinkColumn("Nota_Producto", help="Haz clic para abrir el enlace", display_text="🔗 Abrir Enlace"),
+        "Estado_País": st.column_config.Column("Estado País (Bloqueado)", disabled=True), 
+        "País": st.column_config.Column(disabled=True),
+        "Producto": st.column_config.Column(disabled=True),
+    }
     
     # 解锁日期和网页链接的可编辑数据表
     edited_prod = st.data_editor(
         df_for_edit,
-        column_config={
-            "Estado_Producto": st.column_config.SelectboxColumn("Estado Producto", options=valid_status, required=True),
-            "Actualización Completo": st.column_config.DateColumn("Actualización Completo", format="YYYY-MM-DD"),
-            "Actualización regla": st.column_config.DateColumn("Actualización regla", format="YYYY-MM-DD"),
-            "Nota_Producto": st.column_config.LinkColumn("Nota_Producto", help="Haz clic para abrir el enlace", display_text="🔗 Abrir Enlace"),
-            "Estado_País": st.column_config.Column("Estado País (Bloqueado)", disabled=True), 
-            "País": st.column_config.Column(disabled=True),
-            "Producto": st.column_config.Column(disabled=True),
-        },
+        column_config=col_config_dict,
         use_container_width=True, hide_index=True, height=1000
     )
 
     if st.session_state.get('trigger_save_prod'):
         for _, row in edited_prod.iterrows():
             mask = (st.session_state.df['Producto'] == row['Producto']) & (st.session_state.df['País'] == row['País'])
-            st.session_state.df.loc[mask, 'Estado_Producto'] = row['Estado_Producto']
-            st.session_state.df.loc[mask, 'Actualización Completo'] = pd.to_datetime(row['Actualización Completo']) if pd.notna(row['Actualización Completo']) else pd.NaT
-            st.session_state.df.loc[mask, 'Actualización regla'] = pd.to_datetime(row['Actualización regla']) if pd.notna(row['Actualización regla']) else pd.NaT
-            st.session_state.df.loc[mask, 'Nota_Producto'] = row['Nota_Producto']
+            if 'Estado_Producto' in row: st.session_state.df.loc[mask, 'Estado_Producto'] = row['Estado_Producto']
+            if 'Última actualización completa' in row: st.session_state.df.loc[mask, 'Última actualización completa'] = pd.to_datetime(row['Última actualización completa']) if pd.notna(row['Última actualización completa']) else pd.NaT
+            if 'Última actualización parcial' in row: st.session_state.df.loc[mask, 'Última actualización parcial'] = pd.to_datetime(row['Última actualización parcial']) if pd.notna(row['Última actualización parcial']) else pd.NaT
+            if 'Nota_Producto' in row: st.session_state.df.loc[mask, 'Nota_Producto'] = row['Nota_Producto']
             
         try:
             st.session_state.df.to_excel(FILE_NAME, index=False)
@@ -188,22 +200,24 @@ elif menu == "Resumen":
     col1, col2 = st.columns(2)
     with col1:
         st.subheader("⚠️ Regla Vencida (> 6 meses)")
-        r_df = df_res[(df_res['Actualización regla'] < limit_date) | (df_res['Actualización regla'].isna())]
-        st.dataframe(get_display_df(r_df)[['Producto', 'País', 'Actualización regla']], use_container_width=True, hide_index=True)
+        r_col = 'Última actualización parcial' if 'Última actualización parcial' in df_res.columns else 'Actualización regla'
+        r_df = df_res[(df_res[r_col] < limit_date) | (df_res[r_col].isna())]
+        st.dataframe(get_display_df(r_df)[['Producto', 'País', r_col]], use_container_width=True, hide_index=True)
     with col2:
         st.subheader("⚠️ Completo Vencido (> 6 meses)")
-        c_df = df_res[(df_res['Actualización Completo'] < limit_date) | (df_res['Actualización Completo'].isna())]
-        st.dataframe(get_display_df(c_df)[['Producto', 'País', 'Actualización Completo']], use_container_width=True, hide_index=True)
+        c_col = 'Última actualización completa' if 'Última actualización completa' in df_res.columns else 'Actualización Completo'
+        c_df = df_res[(df_res[c_col] < limit_date) | (df_res[c_col].isna())]
+        st.dataframe(get_display_df(c_df)[['Producto', 'País', c_col]], use_container_width=True, hide_index=True)
 
 # --- 4. Página de Prioridad (优先级计算页面) ---
 elif menu == "Prioridad":
-    st.title("⚡ Prioridad - Matrix de Prioridades Automatizada")
-    st.write("根据预设的复杂业务公式，系统已自动计算出所有产品组合的优先级得分，并默认按从大到小进行降序排列。")
+    st.title("⚡ Prioridad - Matriz de Prioridades Automatizada")
+    st.write("根据您提供的严密嵌套公式链，系统实时在后台进行递进式矩阵运算，并默认按最终得分从大到小降序排列。")
 
-    # 1. 复制一份计算专用的 DataFrame，防止污染基础 Session 状态
+    # 1. 复制一份计算专用的 DataFrame，防止污染基础数据状态
     df_calc = st.session_state.df[st.session_state.df['Producto'].notna() & (st.session_state.df['Producto'] != 'nan')].copy()
 
-    # 2. 调节与筛选器功能（与 Productos 界面一致）
+    # 2. 调节与筛选器功能（与其他界面保持一致）
     c1, c2, c3 = st.columns(3)
     with c1:
         f_country = st.multiselect("Filtrar por País", options=sorted(df_calc['País'].unique()), key="prioridad_f_country")
@@ -217,81 +231,98 @@ elif menu == "Prioridad":
     if f_c_status: df_calc = df_calc[df_calc['Estado_País'].isin(f_c_status)]
 
     # =========================================================================
-    # 3. 核心计算映射区域：请将下方的英文字母字符串替换为您 Excel 中对应的真实列标题名称！
+    # 3. 完美绑定：您提供的真实列名
     # =========================================================================
-    COL_A = 'País'                    # 对应公式3, 4中用于条件分组统计的列 (如：A列为国家)
-    COL_I = 'K (Conversión %)'           # 对应公式1中的 I 列数字
-    COL_J = 'P (Point)'           # 对应公式1中的 J 列数字
-    COL_K = 'E (Extra Keys)'           # 对应公式1中的 K 列数字
-    COL_L = 'F (Documentos)'           # 对应公式1中的 L 列数字
-    COL_M = 'L (Lógica Dinámica)'           # 对应公式1中的 M 列数字
-    COL_N = 'S (Tipo de County details)'           # 对应公式1中的 N 列数字
-    COL_O = 'M (Impacto Precio)'           # 对应公式1中的 O 列数字
-    COL_P = 'P (Point)'           # 对应公式3中被条件求和的 P 列数字
-    COL_Q = 'Última actualización parcial'     # 对应公式2中的 Q 列日期时间
-    COL_R = 'Última actualización completa'  # 对应公式2中的 R 列日期时间
-    COL_S = 'Factor de Tiempo'           # 对应公式5中的 S 列数字
-    COL_T = 'Score Total País'           # 对应公式5中的 T 列数字
-    COL_U = 'Cantidad Prod'           # 对应公式5中的 U 列数字
+    COL_A = 'País'                             # 对应用于条件分组（SUMAR.SI / CONTAR.SI）的列
+    COL_I = 'K (Conversión %)'                 # 公式1的 I 输入
+    COL_J = 'P (Point)'                        # 公式1的 J 输入（注意：公式1会产出全新的COL_P，不要冲突）
+    COL_K = 'E (Extra Keys)'                   # 公式1的 K 输入
+    COL_L = 'F (Documentos)'                   # 公式1的 L 输入
+    COL_M = 'L (Lógica Dinámica)'              # 公式1的 M 输入
+    COL_N = 'S (Tipo de County details)'       # 公式1的 N 输入
+    COL_O = 'M (Impacto Precio)'               # 公式1的 O 输入
+    
+    COL_Q = 'Última actualización parcial'      # 公式2的 Q 输入（日期时间）
+    COL_R = 'Última actualización completa'     # 公式2的 R 输入（日期时间）
+    
+    COL_S_name = 'Factor de Tiempo'            # 公式2最终产出的新列名（取代原表格数值）
+    COL_T_name = 'Score Total País'            # 公式3最终产出的新列名（取代原表格数值）
+    COL_U_name = 'Cantidad Prod'               # 公式4最终产出的新列名（取代原表格数值）
     # =========================================================================
 
-    # 自动安全检查与类型强转（防止 Excel 中夹杂的文本字符破坏数值公式计算）
-    numeric_fields = [COL_I, COL_J, COL_K, COL_L, COL_M, COL_N, COL_O, COL_P, COL_S, COL_T, COL_U]
-    for col in numeric_fields:
-        if col in df_calc.columns and col not in ['Actualización Completo', 'Actualización regla', 'País', 'Producto']:
+    # 将涉及数字运算的列强转为数值型，防止夹杂非法字符
+    input_fields = [COL_I, COL_J, COL_K, COL_L, COL_M, COL_N, COL_O]
+    for col in input_fields:
+        if col in df_calc.columns:
             df_calc[col] = pd.to_numeric(df_calc[col], errors='coerce').fillna(0)
 
     try:
-        # ---- 【公式 1 代码化实现】 ----
-        # =(SI(I4=0; 0; SI(I4<=100; 1; SI(I4<=1000; 3; SI(I4<=10000; 6; 10)))) * (1 + J4)) * ((1 + SI(K4<=20; 1; ... )))
-        cond_I = [df_calc[COL_I] == 0, df_calc[COL_I] <= 100, df_calc[COL_I] <= 1000, df_calc[COL_I] <= 10000]
-        score_I = np.select(cond_I, [0, 1, 3, 6], default=10)
+        # ---------------------------------------------------------------------
+        # 递进层级一：【计算公式 1 ➡ 生成全新的 COL_P】
+        # =(SI(I4=0; 0; SI(I4<=100; 1; SI(I4<=1000; 3; SI(I4<=10000; 6; 10)))) * (1 + J4)) * ((1 + SI(K4<=20; 1; ...)))
+        # ---------------------------------------------------------------------
+        cond_I = [df_calc[COL_I] == 0, df_calc[df_calc.columns[0]] == "NEVER_MATCH_THIS_STUB", df_calc[COL_I] <= 100, df_calc[COL_I] <= 1000, df_calc[COL_I] <= 10000]
+        # 修复逻辑，精准映射阶梯评分
+        cond_I_actual = [df_calc[COL_I] == 0, df_calc[COL_I] <= 100, df_calc[COL_I] <= 1000, df_calc[COL_I] <= 10000]
+        score_I = np.select(cond_I_actual, [0, 1, 3, 6], default=10)
         
         score_K = np.select([df_calc[COL_K] <= 20, df_calc[COL_K] <= 40], [1, 3], default=5)
         score_L = np.select([df_calc[COL_L] <= 4, df_calc[COL_L] <= 6], [2, 4], default=6)
         
-        formula_1_res = (score_I * (1 + df_calc[COL_J])) * ((1 + score_K + score_L + df_calc[COL_M] * 5) * (df_calc[COL_N] * df_calc[COL_O]))
+        # 算出的结果直接代表最新的 COL_P 变量 (P (Point))，不再读取表格里的原数值
+        NEW_COL_P = (score_I * (1 + df_calc[COL_J])) * ((1 + score_K + score_L + df_calc[COL_M] * 5) * (df_calc[COL_N] * df_calc[COL_O]))
+        df_calc['CALC_P_POINT'] = NEW_COL_P
 
-        # ---- 【公式 2 代码化实现】 ----
+        # ---------------------------------------------------------------------
+        # 递进层级二：【计算公式 2 ➡ 生成全新的 COL_S】
         # =(SI(R4=""; 730; HOY()-R4) * 1) + (SI(O(Q4=""; R4>Q4); SI(R4=""; 730; HOY()-R4); HOY()-Q4) * 0,3)
+        # ---------------------------------------------------------------------
         today_date = pd.to_datetime(datetime.now().date())
         
-        # 计算距离今天的具体天数差，如果原本日期为空则默认赋予 730 天
         days_R = (today_date - pd.to_datetime(df_calc[COL_R], errors='coerce')).dt.days.fillna(730)
         days_Q = (today_date - pd.to_datetime(df_calc[COL_Q], errors='coerce')).dt.days.fillna(730)
         
         condition_or = (df_calc[COL_Q].isna()) | (df_calc[COL_R] > df_calc[COL_Q])
         formula_2_sub = np.where(condition_or, days_R, days_Q)
         
-        formula_2_res = (days_R * 1) + (formula_2_sub * 0.3)
+        # 计算结果直接代表最新的 COL_S (Factor de Tiempo)
+        NEW_COL_S = (days_R * 1) + (formula_2_sub * 0.3)
+        df_calc['CALC_S_FACTOR'] = NEW_COL_S
 
-        # ---- 【公式 3 & 4 代码化实现 (SUMAR.SI & CONTAR.SI)】 ----
-        # 计算 A 列中相同元素出现的次数，并将结果分发回原位置
-        df_calc['CONTAR_SI_RES'] = df_calc.groupby(COL_A)[COL_A].transform('count')
-        
-        # 依据 A 列条件对 P 列求和（仅在 P 列存在于 Excel 中且为数值时生效，默认先注保留意保护）
-        if COL_P in df_calc.columns:
-            df_calc['SUMAR_SI_RES'] = df_calc.groupby(COL_A)[COL_P].transform('sum')
+        # ---------------------------------------------------------------------
+        # 递进层级三：【计算公式 4 ➡ 生成全新的 COL_U】
+        # =CONTAR.SI(A:A; A4)
+        # ---------------------------------------------------------------------
+        NEW_COL_U = df_calc.groupby(COL_A)[COL_A].transform('count')
+        df_calc['CALC_U_CANTIDAD'] = NEW_COL_U
 
-        # ---- 【公式 5 代码化实现】 ----
-        # =T4 * (1 +LOG10(U4)) * (1 + (S4 / 90))
-        # 使用 .clip(lower=1) 避免对数 log10(0) 或负数引发系统级运行时报错
-        formula_5_res = df_calc[COL_T] * (1 + np.log10(df_calc[COL_U].clip(lower=1))) * (1 + (df_calc[COL_S] / 90))
+        # ---------------------------------------------------------------------
+        # 递进层级四：【计算公式 3 ➡ 生成全新的 COL_T】
+        # =SUMAR.SI(A:A; A4; P:P) ⚠️ 注意：这里的 P:P 必须使用上面刚刚算出来的全新 NEW_COL_P
+        # ---------------------------------------------------------------------
+        NEW_COL_T = df_calc.groupby(COL_A)['CALC_P_POINT'].transform('sum')
+        df_calc['CALC_T_SCORE'] = NEW_COL_T
 
-        # 4. 将计算出的核心综合指标塞入展现表格
-        df_calc['Prioridad得分'] = formula_5_res
+        # ---------------------------------------------------------------------
+        # 递进层级五：【计算公式 5 ➡ 算出最终的优先级总得分 COL_V】
+        # =T4 * (1 + LOG10(U4)) * (1 + (S4 / 90))
+        # ⚠️ 必须采用刚刚上面新鲜算出来的组件：T4 -> NEW_COL_T, U4 -> NEW_COL_U, S4 -> NEW_COL_S
+        # ---------------------------------------------------------------------
+        # 用 .clip(lower=1) 保护对数函数，避免 log10(0) 导致程序红屏崩溃
+        FINAL_COL_V = df_calc['CALC_T_SCORE'] * (1 + np.log10(df_calc['CALC_U_CANTIDAD'].clip(lower=1))) * (1 + (df_calc['CALC_S_FACTOR'] / 90))
+        df_calc['Final_Priority_Score'] = FINAL_COL_V
 
-        # 5. 按照用户需求：提炼出“国家名”、“国家产品”、“优先级的数字大小”三列，并默认从大到小降序排列
-        df_priority_view = df_calc[['País', 'Producto', 'Prioridad得分']].sort_values(by='Prioridad得分', ascending=False)
+        # 4. 提取需要展示给用户的最终精简列，并默认按得分从高到低（降序）排序
+        df_priority_view = df_calc[['País', 'Producto', 'Final_Priority_Score']].sort_values(by='Final_Priority_Score', ascending=False)
 
-        # 6. 渲染前端高级数据表格视图
-        st.subheader("🔥 实时优先级排期视图 (默认降序排序)")
+        # 5. 渲染展示表格
+        st.subheader("🔥 全自动化优先级排期结果 (默认从大到小降序)")
         st.dataframe(
             df_priority_view,
             column_config={
                 "País": st.column_config.Column("国家名称"),
                 "Producto": st.column_config.Column("国家产品"),
-                "Prioridad得分": st.column_config.NumberColumn("优先级得分 (Score)", format="%.2f"),
+                "Final_Priority_Score": st.column_config.NumberColumn("优先级综合得分 (公式5值)", format="%.2f"),
             },
             use_container_width=True,
             hide_index=True,
@@ -299,6 +330,5 @@ elif menu == "Prioridad":
         )
 
     except Exception as error:
-        st.error(f"⚠️ 优先级矩阵公式计算失败。原因通常是配置文件中的列名称与实际 Excel 文件不匹配，或计算列包含了非数字文本。")
-        st.info(f"详细错误调试日志: {error}")
-        st.warning("💡 请在代码第 140 行到 154 行之间，将类似 'Col_I_Ejemplo' 的变量名修改为您 `Priority (1).xlsx` 表格中真正的第一行标题名字。")
+        st.error(f"⚠️ 链式公式实时计算失败。请检查您的 Excel 文件表头是否与代码中的变量完全对齐。")
+        st.info(f"系统报错调试日志: {error}")
