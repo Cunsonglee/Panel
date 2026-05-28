@@ -65,210 +65,207 @@ def get_country_aliases(country_name, iso3):
     name_clean = str(country_name).strip().lower()
     iso_clean = str(iso3).strip().lower()
     
-    # 基础别名池，把当前名字和ISO加入
     aliases = {name_clean, iso_clean}
     
-    # 全球国家英文/西班牙语/中文跨语言字典
-    translation_book = {
-        "afg": ["afghanistan", "afganistán", "阿富汗"],
-        "ago": ["angola", "angola", "安哥拉"],
-        "alb": ["albania", "albania", "阿尔巴尼亚"],
-        "are": ["united arab emirates", "emiratos árabes unidos", "阿拉伯联合酋长国", "uae", "阿联酋"],
-        "arg": ["argentina", "argentina", "阿根廷"],
-        "arm": ["armenia", "armenia", "亚美尼亚"],
-        "aus": ["australia", "australia", "澳大利亚"],
-        "aut": ["austria", "austria", "奥地利"],
-        "aze": ["azerbaijan", "azerbaiyán", "阿塞拜疆"],
-        "bdi": ["burundi", "burundi", "布隆迪"],
-        "bel": ["belgium", "bélgica", "比利时"],
-        "ben": ["benin", "benín", "贝宁"],
-        "bfa": ["burkina faso", "burkina faso", "布基纳法索"],
-        "bgd": ["bangladesh", "bangladesh", "孟加拉国"],
-        "bgr": ["bulgaria", "bulgaria", "保加利亚"],
-        "bhr": ["bahrain", "bahréin", "巴林"],
-        "bhs": ["bahamas", "bahamas", "巴哈马"],
-        "bih": ["bosnia and herzegovina", "bosnia y herzegovina", "波斯尼亚和黑塞哥维那", "波黑"],
-        "blr": ["belarus", "bielorrusia", "白俄罗斯"],
-        "blz": ["belize", "belice", "伯利兹"],
-        "bol": ["bolivia", "bolivia", "玻利维亚"],
-        "bra": ["brazil", "brasil", "巴西"],
-        "brb": ["barbados", "barbados", "巴巴多斯"],
-        "brn": ["brunei", "brunéi", "文莱"],
-        "btn": ["bhutan", "bután", "不丹"],
-        "bwa": ["botswana", "botsuana", "博茨瓦纳"],
-        "caf": ["central african republic", "república centroafricana", "中非共和国", "中非"],
-        "can": ["canada", "canadá", "加拿大"],
-        "che": ["switzerland", "suiza", "瑞士"],
-        "chl": ["chile", "chile", "智利"],
-        "chn": ["china", "china", "中国"],
-        "civ": ["cote d'ivoire", "ivory coast", "costa de marfil", "科特迪瓦"],
-        "cmr": ["cameroon", "camerún", "喀麦隆"],
-        "cod": ["democratic republic of the congo", "república democrática del congo", "刚果（金）", "drc"],
-        "cog": ["congo", "congo", "刚果（布）"],
-        "col": ["colombia", "colombia", "哥伦比亚"],
-        "com": ["comoros", "comoras", "科摩罗"],
-        "cpv": ["cape verde", "cabo verde", "佛得角"],
-        "cri": ["costa rica", "costa rica", "哥斯达黎加"],
-        "cub": ["cuba", "cuba", "古巴"],
-        "cyp": ["cyprus", "chipre", "塞浦路斯"],
-        "cze": ["czech republic", "czechia", "república checa", "捷克"],
-        "deu": ["germany", "alemania", "德国"],
-        "dji": ["djibouti", "yibuti", "吉布提"],
-        "dma": ["dominica", "dominica", "多米尼克"],
-        "dnk": ["denmark", "dinamarca", "丹麦"],
-        "dom": ["dominican republic", "república dominicana", "多米尼加共和国", "多米尼加"],
-        "dza": ["algeria", "argelia", "阿尔及利亚"],
-        "ecu": ["ecuador", "ecuador", "厄瓜多尔"],
-        "egy": ["egypt", "egipto", "埃及"],
-        "eri": ["eritrea", "eritrea", "厄立特里亚"],
-        "esp": ["spain", "españa", "西班牙"],
-        "est": ["estonia", "estonia", "爱沙尼亚"],
-        "eth": ["ethiopia", "etiopía", "埃塞俄比亚"],
-        "fin": ["finland", "finlandia", "芬兰"],
-        "fji": ["fiji", "fiyi", "斐济"],
-        "fra": ["france", "francia", "法国"],
-        "fsm": ["micronesia", "micronesia", "密克罗尼西亚"],
-        "gab": ["gabon", "gabón", "加蓬"],
-        "gbr": ["united kingdom", "reino unido", "英国", "uk", "england"],
-        "geo": ["georgia", "georgia", "格鲁吉亚"],
-        "gha": ["ghana", "ghana", "加纳"],
-        "gin": ["guinea", "guinea", "几内亚"],
-        "gmb": ["gambia", "gambia", "冈比亚"],
-        "gnb": ["guinea-bissau", "guinea-bisáu", "几内亚比绍"],
-        "gnq": ["equatorial guinea", "guinea ecuatorial", "赤道几内亚"],
-        "grc": ["greece", "grecia", "希腊"],
-        "grd": ["grenada", "granada", "格林纳达"],
-        "gtm": ["guatemala", "guatemala", "危地马拉"],
-        "guy": ["guyana", "guyana", "圭亚那"],
-        "hnd": ["honduras", "honduras", "洪都拉斯"],
-        "hrv": ["croatia", "croacia", "克罗地亚"],
-        "hti": ["haiti", "haití", "海地"],
-        "hun": ["hungary", "hungría", "匈牙利"],
-        "idn": ["indonesia", "indonesia", "印度尼西亚", "印尼"],
-        "ind": ["india", "india", "印度"],
-        "irl": ["ireland", "irlanda", "爱尔兰"],
-        "irn": ["iran", "irán", "伊朗"],
-        "irq": ["iraq", "irak", "伊拉克"],
-        "isl": ["iceland", "islandia", "冰岛"],
-        "isr": ["israel", "israel", "以色列"],
-        "ita": ["italy", "italia", "意大利"],
-        "jam": ["jamaica", "jamaica", "牙买加"],
-        "jor": ["jordan", "jordania", "约旦"],
-        "jpn": ["japan", "japón", "日本"],
-        "kaz": ["kazakhstan", "kazajistán", "哈萨克斯坦"],
-        "ken": ["kenya", "kenia", "肯尼亚"],
-        "kgz": ["kyrgyzstan", "kirguistán", "吉尔吉斯斯坦"],
-        "khm": ["cambodia", "camboya", "柬埔寨"],
-        "kir": ["kiribati", "kiribati", "基里巴斯"],
-        "kna": ["saint kitts and nevis", "san cristóbal y nieves", "圣基茨和尼维斯"],
-        "kor": ["south korea", "corea del sur", "韩国", "korea", "korea, south"],
-        "kwt": ["kuwait", "kuwait", "科威特"],
-        "lao": ["laos", "laos", "老挝"],
-        "lbn": ["lebanon", "líbano", "黎巴嫩"],
-        "lbr": ["liberia", "liberia", "利比里亚"],
-        "lby": ["libya", "libia", "利比亚"],
-        "lca": ["saint lucia", "santa lucía", "圣卢西亚"],
-        "lie": ["liechtenstein", "liechtenstein", "列支敦士登"],
-        "lka": ["sri lanka", "sri lanka", "斯里兰卡"],
-        "lso": ["lesotho", "lesoto", "莱索托"],
-        "ltu": ["lithuania", "lituania", "立陶宛"],
-        "lux": ["luxembourg", "luxemburgo", "卢森堡"],
-        "lva": ["latvia", "letonia", "拉脱维亚"],
-        "mar": ["morocco", "marruecos", "摩洛哥"],
-        "mco": ["monaco", "mónaco", "摩纳哥"],
-        "mda": ["moldova", "moldavia", "摩尔多瓦"],
-        "mdg": ["madagascar", "madagascar", "马达加斯加"],
-        "mdv": ["maldives", "maldivas", "马尔代夫"],
-        "mex": ["mexico", "méxico", "墨西哥"],
-        "mhl": ["marshall islands", "islas marshall", "马绍尔群岛"],
-        "mkd": ["north macedonia", "macedonia del norte", "北马其顿"],
-        "mli": ["mali", "malí", "马里"],
-        "mlt": ["malta", "malta", "马耳他"],
-        "mmr": ["myanmar", "birmania", "缅甸"],
-        "mne": ["montenegro", "montenegro", "黑山"],
-        "mng": ["mongolia", "mongolia", "蒙古"],
-        "moz": ["mozambique", "mozambique", "莫桑比克"],
-        "mrt": ["mauritania", "mauritania", "毛里塔尼亚"],
-        "mus": ["mauritius", "mauricio", "毛里求斯"],
-        "mwi": ["malawi", "malaui", "马拉维"],
-        "mys": ["malaysia", "malasia", "马来西亚"],
-        "nam": ["namibia", "namibia", "纳米比亚"],
-        "ner": ["niger", "níger", "尼日尔"],
-        "nga": ["nigeria", "nigeria", "尼日利亚"],
-        "nic": ["nicaragua", "nicaragua", "尼加拉瓜"],
-        "nld": ["netherlands", "países bajos", "荷兰", "holanda"],
-        "nor": ["norway", "noruega", "挪威"],
-        "npl": ["nepal", "nepal", "尼泊尔"],
-        "nru": ["nauru", "nauru", "瑙鲁"],
-        "nzl": ["new zealand", "nueva zelanda", "新西兰"],
-        "omn": ["oman", "omán", "阿曼"],
-        "pak": ["pakistan", "pakistán", "巴基斯坦"],
-        "pan": ["panama", "panamá", "巴拿马"],
-        "per": ["peru", "perú", "秘鲁"],
-        "phl": ["philippines", "filipinas", "菲律宾"],
-        "plw": ["palau", "palaos", "帕劳"],
-        "png": ["papua new guinea", "papúa nueva guinea", "巴布亚新几内亚"],
-        "pol": ["poland", "polonia", "波兰"],
-        "prk": ["north korea", "corea del norte", "朝鲜", "dprk"],
-        "prt": ["portugal", "portugal", "葡萄牙"],
-        "pry": ["paraguay", "paraguay", "巴拉圭"],
-        "qat": ["qatar", "catar", "卡塔尔"],
-        "rou": ["romania", "rumania", "罗马尼亚"],
-        "rus": ["russia", "rusia", "俄罗斯"],
-        "rwa": ["rwanda", "ruanda", "卢旺达"],
-        "sau": ["saudi arabia", "arabia saudita", "沙特阿拉伯", "沙特"],
-        "sdn": ["sudan", "sudán", "苏丹"],
-        "sen": ["senegal", "senegal", "塞内加尔"],
-        "sgp": ["singapore", "singapur", "新加坡"],
-        "slb": ["solomon islands", "islas salomón", "所罗门群岛"],
-        "sle": ["sierra leone", "sierra leona", "塞拉利昂"],
-        "slv": ["el salvador", "el salvador", "萨尔瓦多"],
-        "smr": ["san marino", "san marino", "圣马力诺"],
-        "som": ["somalia", "somalia", "索马里"],
-        "srb": ["serbia", "serbia", "塞尔维亚"],
-        "ssd": ["south sudan", "sudán del sur", "南苏丹"],
-        "stp": ["sao tome and principe", "santo tomé y príncipe", "圣多美和普林西比"],
-        "sur": ["suriname", "surinam", "苏里南"],
-        "svk": ["slovakia", "eslovaquia", "斯洛伐克"],
-        "svn": ["slovenia", "eslovenia", "斯洛文尼亚"],
-        "swe": ["sweden", "suecia", "瑞典"],
-        "swz": ["eswatini", "esuatini", "swaziland", "斯威士兰"],
-        "syc": ["seychelles", "seychelles", "塞舌尔"],
-        "syr": ["syria", "siria", "叙利亚"],
-        "tcd": ["chad", "chad", "乍得"],
-        "tgo": ["togo", "togo", "多哥"],
-        "tha": ["thailand", "tailandia", "泰国"],
-        "tjk": ["tajikistan", "tayikistán", "塔吉克斯坦"],
-        "tkm": ["turkmenistan", "turkmenistán", "土库曼斯坦"],
-        "tls": ["timor-leste", "timor oriental", "东帝汶"],
-        "ton": ["tonga", "tonga", "汤加"],
-        "tto": ["trinidad and tobago", "trinidad y tobago", "特立尼达和多巴哥"],
-        "tun": ["tunisia", "túnez", "突尼斯"],
-        "tur": ["turkey", "turquía", "土耳其"],
-        "tuv": ["tuvalu", "tuvalu", "图瓦卢"],
-        "twn": ["taiwan", "taiwán", "台湾"],
-        "tza": ["tanzania", "tanzania", "坦桑尼亚"],
-        "uga": ["uganda", "uganda", "乌干达"],
-        "ukr": ["ukraine", "ucrania", "乌克兰"],
-        "ury": ["uruguay", "uruguay", "乌拉圭"],
-        "usa": ["united states", "estados unidos", "美国", "usa"],
-        "uzb": ["uzbekistan", "uzbekistán", "乌兹别克斯坦"],
-        "vat": ["vatican city", "ciudad del vaticano", "梵蒂冈"],
-        "vct": ["saint vincent and the grenadines", "san vicente y las granadinas", "圣文森特和格林纳丁斯"],
-        "ven": ["venezuela", "venezuela", "委内瑞拉"],
-        "vnm": ["vietnam", "vietnam", "越南"],
-        "vut": ["vanuatu", "vanuatu", "瓦努阿图"],
-        "wsm": ["samoa", "samoa", "萨摩亚"],
-        "yem": ["yemen", "yemen", "也门"],
-        "zaf": ["south africa", "sudáfrica", "南非"],
-        "zmb": ["zambia", "zambia", "赞比亚"],
-        "zwe": ["zimbabwe", "zimbabue", "津巴布韦"]
-    }
+translation_book = {
+    "afg": ["afghanistan", "afganistán", "阿富汗", "afghanistan", "afghanistan", "アフガニスタン", "афганистан"],
+    "ago": ["angola", "angola", "安哥拉", "angola", "angola", "アンゴラ", "ангола"],
+    "alb": ["albania", "albania", "阿尔巴尼亚", "albanie", "albanien", "アルバニア", "албания"],
+    "are": ["united arab emirates", "emiratos árabes unidos", "阿拉伯联合酋长国", "uae", "阿联酋", "émirats arabes unis", "vereinigte arabische emirate", "アラブ首長国連邦", "объединенные арабские эмираты", "оаэ"],
+    "arg": ["argentina", "argentina", "阿根廷", "argentine", "argentinien", "アルゼンチン", "аргентина"],
+    "arm": ["armenia", "armenia", "亚美尼亚", "arménie", "armenien", "アルメニア", "армения"],
+    "aus": ["australia", "australia", "澳大利亚", "australie", "australien", "オーストラリア", "австралия"],
+    "aut": ["austria", "austria", "奥地利", "autriche", "österreich", "オーストリア", "австрия"],
+    "aze": ["azerbaijan", "azerbaiyán", "阿塞拜疆", "azerbaïdjan", "aserbaidschan", "アゼルバイジャン", "азербайджан"],
+    "bdi": ["burundi", "burundi", "布隆迪", "burundi", "burundi", "ブルンジ", "бурунди"],
+    "bel": ["belgium", "bélgica", "比利时", "belgique", "belgien", "ベルギー", "бельгия"],
+    "ben": ["benin", "benín", "贝宁", "bénin", "benin", "ベナン", "бенин"],
+    "bfa": ["burkina faso", "burkina faso", "布基纳法索", "burkina faso", "burkina faso", "ブルキナファソ", "буркина-фасо"],
+    "bgd": ["bangladesh", "bangladesh", "孟加拉国", "bangladesh", "bangladesch", "バングラデシュ", "бангладеш"],
+    "bgr": ["bulgaria", "bulgaria", "保加利亚", "bulgarie", "bulgarien", "ブルガリア", "болгария"],
+    "bhr": ["bahrain", "bahréin", "巴林", "bahreïn", "bahrain", "バーレーン", "бахрейн"],
+    "bhs": ["bahamas", "bahamas", "巴哈马", "bahamas", "bahamas", "バハマ", "багамы"],
+    "bih": ["bosnia and herzegovina", "bosnia y herzegovina", "波斯尼亚和黑塞哥维那", "波黑", "bosnie-herzégovine", "bosnien und herzegowina", "ボスニア・ヘルツェゴビナ", "босния и герцеговина"],
+    "blr": ["belarus", "bielorrusia", "白俄罗斯", "biélorussie", "belarus", "weißrussland", "ベラルーシ", "беларусь"],
+    "blz": ["belize", "belice", "伯利兹", "belize", "belize", "ベリーズ", "белиз"],
+    "bol": ["bolivia", "bolivia", "玻利维亚", "bolivie", "bolivien", "ボリビア", "боливия"],
+    "bra": ["brazil", "brasil", "巴西", "brésil", "brasilien", "ブラジル", "бразилия"],
+    "brb": ["barbados", "barbados", "巴巴多斯", "barbade", "barbados", "バルバドス", "барбадос"],
+    "brn": ["brunei", "brunéi", "文莱", "brunei", "brunei", "ブルネイ", "бруней"],
+    "btn": ["bhutan", "bután", "不丹", "bhoutan", "bhutan", "ブータン", "бутан"],
+    "bwa": ["botswana", "botsuana", "博茨瓦纳", "botswana", "botsuana", "ボツワナ", "ботсвана"],
+    "caf": ["central african republic", "república centroafricana", "中非共和国", "中非", "république centrafricaine", "zentralafrikanische republik", "中央アフリカ共和国", "центральноафриканская республика", "цар"],
+    "can": ["canada", "canadá", "加拿大", "canada", "kanada", "カナダ", "канада"],
+    "che": ["switzerland", "suiza", "瑞士", "suisse", "schweiz", "スイス", "швейцария"],
+    "chl": ["chile", "chile", "智利", "chili", "chile", "チリ", "чили"],
+    "chn": ["china", "china", "中国", "chine", "china", "中国", "китай"],
+    "civ": ["cote d'ivoire", "ivory coast", "costa de marfil", "科特迪瓦", "côte d'ivoire", "elfenbeinküste", "コートジボワール", "кот-д'ивуар"],
+    "cmr": ["cameroon", "camerún", "喀麦隆", "cameroun", "kamerun", "カメルーン", "камерун"],
+    "cod": ["democratic republic of the congo", "república democrática del congo", "刚果（金）", "drc", "république démocratique du congo", "demokratische republik kongo", "コンゴ民主共和国", "демократическая республика конго"],
+    "cog": ["congo", "congo", "刚果（布）", "congo", "kongo", "コンゴ共和国", "конго"],
+    "col": ["colombia", "colombia", "哥伦比亚", "colombie", "kolumbien", "コロンビア", "колумбия"],
+    "com": ["comoros", "comoras", "科摩罗", "comores", "komoren", "コモロ", "коморы"],
+    "cpv": ["cape verde", "cabo verde", "佛得角", "cap-vert", "kap verde", "カーボベルデ", "кабо-верде"],
+    "cri": ["costa rica", "costa rica", "哥斯达黎加", "costa rica", "costa rica", "コスタリカ", "коста-рика"],
+    "cub": ["cuba", "cuba", "古巴", "cuba", "kuba", "キューバ", "куба"],
+    "cyp": ["cyprus", "chipre", "塞浦路斯", "chypre", "zypern", "キプロス", "кипр"],
+    "cze": ["czech republic", "czechia", "república checa", "捷克", "république tchèque", "tchéquie", "tschechien", "チェコ", "чехия"],
+    "deu": ["germany", "alemania", "德国", "allemagne", "deutschland", "ドイツ", "германия"],
+    "dji": ["djibouti", "yibuti", "吉布提", "djibouti", "dschibuti", "ジブチ", "джибути"],
+    "dma": ["dominica", "dominica", "多米尼克", "dominique", "dominica", "ドミニカ国", "доминика"],
+    "dnk": ["denmark", "dinamarca", "丹麦", "danemark", "dänemark", "デンマーク", "дания"],
+    "dom": ["dominican republic", "república dominicana", "多米尼加共和国", "多米尼加", "république dominicaine", "dominikanische republik", "ドミニカ共和国", "доминиканская республика"],
+    "dza": ["algeria", "argelia", "阿尔及利亚", "algérie", "algerien", "アルジェリア", "алжир"],
+    "ecu": ["ecuador", "ecuador", "厄瓜多尔", "équateur", "ecuador", "エクアドル", "эквадор"],
+    "egy": ["egypt", "egipto", "埃及", "égypte", "ägypten", "エジプト", "египет"],
+    "eri": ["eritrea", "eritrea", "厄立特里亚", "érythrée", "eritrea", "エリトリア", "эритрея"],
+    "esp": ["spain", "españa", "西班牙", "espagne", "spanien", "スペイン", "испания"],
+    "est": ["estonia", "estonia", "爱沙尼亚", "estonie", "estland", "エストニア", "эстония"],
+    "eth": ["ethiopia", "etiopía", "埃塞俄比亚", "éthiopie", "äthiopien", "エチオピア", "эфиопия"],
+    "fin": ["finland", "finlandia", "芬兰", "finlande", "finnland", "フィンランド", "финляндия"],
+    "fji": ["fiji", "fiyi", "斐济", "fidji", "fidschi", "フィジー", "фиджи"],
+    "fra": ["france", "francia", "法国", "france", "frankreich", "フランス", "франция"],
+    "fsm": ["micronesia", "micronesia", "密克罗尼西亚", "micronésie", "mikronesien", "ミクロネシア", "микронезия"],
+    "gab": ["gabon", "gabón", "加蓬", "gabon", "gabun", "ガボン", "габон"],
+    "gbr": ["united kingdom", "reino unido", "英国", "uk", "england", "royaume-uni", "vereinigtes königreich", "großbritannien", "イギリス", "великобритания"],
+    "geo": ["georgia", "georgia", "格鲁吉亚", "géorgie", "georgien", "ジョージア", "грузия"],
+    "gha": ["ghana", "ghana", "加纳", "ghana", "ghana", "ガーナ", "гана"],
+    "gin": ["guinea", "guinea", "几内亚", "guinée", "guinea", "ギニア", "гвинея"],
+    "gmb": ["gambia", "gambia", "冈比亚", "gambie", "gambia", "ガンビア", "гамбия"],
+    "gnb": ["guinea-bissau", "guinea-bisáu", "几内亚比绍", "guinée-bissau", "guinea-bissau", "ギニアビサウ", "гвинея-бисау"],
+    "gnq": ["equatorial guinea", "guinea ecuatorial", "赤道几内亚", "guinée équatoriale", "äquatorialguinea", "赤道ギニア", "экваториальная гвинея"],
+    "grc": ["greece", "grecia", "希腊", "grèce", "griechenland", "ギリシャ", "греция"],
+    "grd": ["grenada", "granada", "格林纳达", "grenade", "grenada", "グレナダ", "гренада"],
+    "gtm": ["guatemala", "guatemala", "危地马拉", "guatemala", "guatemala", "グアテマラ", "гватемала"],
+    "guy": ["guyana", "guyana", "圭亚那", "guyana", "guyana", "ガイアナ", "гайана"],
+    "hnd": ["honduras", "honduras", "洪都拉斯", "honduras", "honduras", "ホンジュラス", "гондурас"],
+    "hrv": ["croatia", "croacia", "克罗地亚", "croatie", "kroatien", "クロアチア", "хорватия"],
+    "hti": ["haiti", "haití", "海地", "haïti", "haiti", "ハイチ", "гаити"],
+    "hun": ["hungary", "hungría", "匈牙利", "hongrie", "ungarn", "ハンガリー", "венгрия"],
+    "idn": ["indonesia", "indonesia", "印度尼西亚", "印尼", "indonésie", "indonesien", "インドネシア", "индонезия"],
+    "ind": ["india", "india", "印度", "inde", "indien", "インド", "индия"],
+    "irl": ["ireland", "irlanda", "爱尔兰", "irlande", "irland", "アイルランド", "ирландия"],
+    "irn": ["iran", "irán", "伊朗", "iran", "iran", "イラン", "иран"],
+    "irq": ["iraq", "irak", "伊拉克", "irak", "irak", "イラク", "ирак"],
+    "isl": ["iceland", "islandia", "冰岛", "islande", "island", "アイスランド", "исландия"],
+    "isr": ["israel", "israel", "以色列", "israël", "israel", "イスラエル", "израиль"],
+    "ita": ["italy", "italia", "意大利", "italie", "italien", "イタリア", "италия"],
+    "jam": ["jamaica", "jamaica", "牙买加", "jamaïque", "jamaika", "ジャマイカ", "ямайка"],
+    "jor": ["jordan", "jordania", "约旦", "jordanie", "jordanien", "ヨルダン", "иордания"],
+    "jpn": ["japan", "japón", "日本", "japon", "japan", "япония"],
+    "kaz": ["kazakhstan", "kazajistán", "哈萨克斯坦", "kazakhstan", "kasachstan", "カザフスタン", "казахстан"],
+    "ken": ["kenya", "kenia", "肯尼亚", "kenya", "kenia", "ケニア", "кения"],
+    "kgz": ["kyrgyzstan", "kirguistán", "吉尔吉斯斯坦", "kirghizistan", "kirgisistan", "キルギス", "киргизия"],
+    "khm": ["cambodia", "camboya", "柬埔寨", "cambodge", "kambodscha", "カンボジア", "камбоджа"],
+    "kir": ["kiribati", "kiribati", "基里巴斯", "kiribati", "kiribati", "キリバス", "кирибати"],
+    "kna": ["saint kitts and nevis", "san cristóbal y nieves", "圣基茨和尼维斯", "saint-kitts-et-nevis", "st. kitts und nevis", "セントクリストファー・ネイビス", "сент-китс и невис"],
+    "kor": ["south korea", "corea del sur", "韩国", "korea", "korea, south", "corée du sud", "südkorea", "韓国", "южная корея"],
+    "kwt": ["kuwait", "kuwait", "科威特", "koweït", "kuwait", "クウェート", "кувейт"],
+    "lao": ["laos", "laos", "老挝", "laos", "laos", "ラオス", "лаос"],
+    "lbn": ["lebanon", "líbano", "黎巴嫩", "liban", "libanon", "レバノン", "ливан"],
+    "lbr": ["liberia", "liberia", "利比里亚", "libéria", "liberia", "リベリア", "либерия"],
+    "lby": ["libya", "libia", "利比亚", "libye", "libyen", "リビア", "ливия"],
+    "lca": ["saint lucia", "santa lucía", "圣卢西亚", "sainte-lucie", "st. lucia", "セントルシア", "сент-люсия"],
+    "lie": ["liechtenstein", "liechtenstein", "列支敦士登", "liechtenstein", "liechtenstein", "リヒテンシュタイン", "лихтенштейн"],
+    "lka": ["sri lanka", "sri lanka", "斯里兰卡", "sri lanka", "sri lanka", "スリランカ", "шри-ланка"],
+    "lso": ["lesotho", "lesoto", "莱索托", "lesotho", "lesotho", "レソト", "лесото"],
+    "ltu": ["lithuania", "lituania", "立陶宛", "lituanie", "litauen", "リトアニア", "литва"],
+    "lux": ["luxembourg", "luxemburgo", "卢森堡", "luxembourg", "luxemburg", "ルクセンブルク", "люксембург"],
+    "lva": ["latvia", "letonia", "拉脱维亚", "lettonie", "lettland", "ラトビア", "латвия"],
+    "mar": ["morocco", "marruecos", "摩洛哥", "maroc", "marokko", "モロッコ", "марокко"],
+    "mco": ["monaco", "mónaco", "摩纳哥", "monaco", "monaco", "モナコ", "монако"],
+    "mda": ["moldova", "moldavia", "摩尔多瓦", "moldavie", "moldau", "モルドバ", "молдова"],
+    "mdg": ["madagascar", "madagascar", "马达加斯加", "madagascar", "madagaskar", "マダガスカル", "мадагаскар"],
+    "mdv": ["maldives", "maldivas", "马尔代夫", "maldives", "malediven", "モルディブ", "мальдивы"],
+    "mex": ["mexico", "méxico", "墨西哥", "mexique", "mexiko", "メキシコ", "мексика"],
+    "mhl": ["marshall islands", "islas marshall", "马绍尔群岛", "îles marshall", "marshallinseln", "マーシャル諸島", "маршалловы острова"],
+    "mkd": ["north macedonia", "macedonia del norte", "北马其顿", "macédoine du nord", "nordmazedonien", "北マケドニア", "северная македония"],
+    "mli": ["mali", "malí", "马里", "mali", "mali", "マリ", "мали"],
+    "mlt": ["malta", "malta", "马耳他", "malte", "malta", "マルタ", "мальта"],
+    "mmr": ["myanmar", "birmania", "缅甸", "myanmar", "birmanie", "myanmar", "ミャンマー", "мьянма"],
+    "mne": ["montenegro", "montenegro", "黑山", "monténégro", "montenegro", "モンテネグロ", "черногория"],
+    "mng": ["mongolia", "mongolia", "蒙古", "mongolie", "mongolei", "モンゴル", "монголия"],
+    "moz": ["mozambique", "mozambique", "莫桑比克", "mozambique", "mosambik", "モザンビーク", "мозамбик"],
+    "mrt": ["mauritania", "mauritania", "毛里塔尼亚", "mauritanie", "mauretanien", "モーリタニア", "мавритания"],
+    "mus": ["mauritius", "mauricio", "毛里求斯", "maurice", "mauritius", "モーリシャス", "маврикий"],
+    "mwi": ["malawi", "malaui", "马拉维", "malawi", "malawi", "マラウイ", "малави"],
+    "mys": ["malaysia", "malasia", "马来西亚", "malaisie", "malaysia", "マレーシア", "малайзия"],
+    "nam": ["namibia", "namibia", "纳米比亚", "namibie", "namibia", "ナミビア", "намибия"],
+    "ner": ["niger", "níger", "尼日尔", "niger", "niger", "ニジェール", "нигер"],
+    "nga": ["nigeria", "nigeria", "尼日利亚", "nigéria", "nigeria", "ナイジェリア", "нигерия"],
+    "nic": ["nicaragua", "nicaragua", "尼加拉瓜", "nicaragua", "nicaragua", "ニカラグア", "никарагуа"],
+    "nld": ["netherlands", "países bajos", "荷兰", "holanda", "pays-bas", "niederlande", "オランダ", "нидерланды"],
+    "nor": ["norway", "noruega", "挪威", "norvège", "norwegen", "ノルウェー", "норвегия"],
+    "npl": ["nepal", "nepal", "尼泊尔", "népal", "nepal", "ネパール", "непал"],
+    "nru": ["nauru", "nauru", "瑙鲁", "nauru", "nauru", "ナウル", "науру"],
+    "nzl": ["new zealand", "nueva zelanda", "新西兰", "nouvelle-zélande", "neuseeland", "ニュージーランド", "новая зеландия"],
+    "omn": ["oman", "omán", "阿曼", "oman", "oman", "オマーン", "оман"],
+    "pak": ["pakistan", "pakistán", "巴基斯坦", "pakistan", "pakistan", "パキスタン", "пакистан"],
+    "pan": ["panama", "panamá", "巴拿马", "panama", "panama", "パナマ", "панама"],
+    "per": ["peru", "perú", "秘鲁", "pérou", "peru", "ペルー", "перу"],
+    "phl": ["philippines", "filipinas", "菲律宾", "philippines", "philippinen", "フィリピン", "филиппины"],
+    "plw": ["palau", "palaos", "帕劳", "palaos", "palau", "パラオ", "палау"],
+    "png": ["papua new guinea", "papúa nueva guinea", "巴布亚新几内亚", "papouasie-nouvelle-guinée", "papua-neuguinea", "パプアニューギニア", "папуа — новая гвинея"],
+    "pol": ["poland", "polonia", "波兰", "pologne", "polen", "ポーランド", "польша"],
+    "prk": ["north korea", "corea del norte", "朝鲜", "dprk", "corée du nord", "nordkorea", "北朝鮮", "северная корея"],
+    "prt": ["portugal", "portugal", "葡萄牙", "portugal", "portugal", "ポルトガル", "португалия"],
+    "pry": ["paraguay", "paraguay", "巴拉圭", "paraguay", "paraguay", "パラグアイ", "парагвай"],
+    "qat": ["qatar", "catar", "卡塔尔", "qatar", "katar", "カタール", "катар"],
+    "rou": ["romania", "rumania", "罗马尼亚", "roumanie", "rumänien", "ルーマニア", "румыния"],
+    "rus": ["russia", "rusia", "俄罗斯", "russie", "russland", "ロシア", "россия"],
+    "rwa": ["rwanda", "ruanda", "卢旺达", "rwanda", "ruanda", "ルワンダ", "руанда"],
+    "sau": ["saudi arabia", "arabia saudita", "沙特阿拉伯", "沙特", "arabie saoudite", "saudi-arabien", "サウジアラビア", "саудовская аравия"],
+    "sdn": ["sudan", "sudán", "苏丹", "soudan", "sudan", "スーダン", "судан"],
+    "sen": ["senegal", "senegal", "塞内加尔", "sénégal", "senegal", "セネガル", "сенегал"],
+    "sgp": ["singapore", "singapur", "新加坡", "singapour", "singapur", "シンガポール", "сингапур"],
+    "slb": ["solomon islands", "islas salomón", "所罗门群岛", "îles salomon", "salomonen", "ソロモン諸島", "соломоновы острова"],
+    "sle": ["sierra leone", "sierra leona", "塞拉利昂", "sierra leone", "sierra leone", "シエラレオネ", "сьерра-леоне"],
+    "slv": ["el salvador", "el salvador", "萨尔瓦多", "el salvador", "el salvador", "エルサルバドル", "сальвадор"],
+    "smr": ["san marino", "san marino", "圣马力诺", "saint-marin", "san marino", "サンマリノ", "сан-марино"],
+    "som": ["somalia", "somalia", "索马里", "somalie", "somalia", "ソマリア", "сомали"],
+    "srb": ["serbia", "serbia", "塞尔维亚", "serbie", "serbien", "セルビア", "сербия"],
+    "ssd": ["south sudan", "sudán del sur", "南苏丹", "soudan du sud", "südsudan", "南スーダン", "южный судан"],
+    "stp": ["sao tome and principe", "santo tomé y príncipe", "圣多美和普林西比", "sao tomé-et-principe", "são tomé und príncipe", "サントメ・プリンシペ", "сан-томе и принсипи"],
+    "sur": ["suriname", "surinam", "苏里南", "suriname", "suriname", "スリナム", "суринам"],
+    "svk": ["slovakia", "eslovaquia", "斯洛伐克", "slovaquie", "slowakei", "スロバキア", "словакия"],
+    "svn": ["slovenia", "eslovenia", "斯洛文尼亚", "slovénie", "slowenien", "スロベニア", "словения"],
+    "swe": ["sweden", "suecia", "瑞典", "suède", "schweden", "スウェーデン", "швеция"],
+    "swz": ["eswatini", "esuatini", "swaziland", "斯威士兰", "eswatini", "swasiland", "エスワティニ", "эсватини"],
+    "syc": ["seychelles", "seychelles", "塞舌尔", "seychelles", "seychellen", "セーシェル", "сейшельские острова"],
+    "syr": ["syria", "siria", "叙利亚", "syrie", "syrien", "シリア", "сирия"],
+    "tcd": ["chad", "chad", "乍得", "tchad", "tschad", "チャド", "чад"],
+    "tgo": ["togo", "togo", "多哥", "togo", "togo", "トーゴ", "того"],
+    "tha": ["thailand", "tailandia", "泰国", "thaïlande", "thailand", "タイ", "таиланд"],
+    "tjk": ["tajikistan", "tayikistán", "塔吉克斯坦", "tadjikistan", "tadschikistan", "タジキスタン", "таджикистан"],
+    "tkm": ["turkmenistan", "turkmenistán", "土库曼斯坦", "turkménistan", "turkmenistan", "トルクメニスタン", "туркменистан"],
+    "tls": ["timor-leste", "timor oriental", "东帝汶", "timor oriental", "osttimor", "東ティモール", "восточный тимор"],
+    "ton": ["tonga", "tonga", "汤加", "tonga", "tonga", "トンガ", "тонга"],
+    "tto": ["trinidad and tobago", "trinidad y tobago", "特立尼达和多巴哥", "trinité-et-tobago", "trinidad und tobago", "トリニダード・トバゴ", "тринидад и тобаго"],
+    "tun": ["tunisia", "túnez", "突尼斯", "tunisie", "tunesien", "チュニジア", "тунис"],
+    "tur": ["turkey", "turquía", "土耳其", "turquie", "türkei", "トルコ", "турция"],
+    "tuv": ["tuvalu", "tuvalu", "图瓦卢", "tuvalu", "tuvalu", "ツバル", "тувалу"],
+    "twn": ["taiwan", "taiwán", "台湾", "taïwan", "taiwan", "台湾", "тайвань"],
+    "tza": ["tanzania", "tanzania", "坦桑尼亚", "tanzanie", "tansania", "タンザニア", "танзания"],
+    "uga": ["uganda", "uganda", "乌干达", "ouganda", "uganda", "ウガンダ", "уганда"],
+    "ukr": ["ukraine", "ucrania", "乌克兰", "ukraine", "ukraine", "ウクライナ", "украина"],
+    "ury": ["uruguay", "uruguay", "乌拉圭", "uruguay", "uruguay", "ウルグアイ", "уругвай"],
+    "usa": ["united states", "estados unidos", "美国", "usa", "états-unis", "vereinigte staaten", "アメリカ", "сша"],
+    "uzb": ["uzbekistan", "uzbekistán", "乌兹别克斯坦", "ouzbékistan", "usbekistan", "ウズベキスタン", "узбекистан"],
+    "vat": ["vatican city", "ciudad del vaticano", "梵蒂冈", "vatican", "vatikanstadt", "バチカン", "ватикан"],
+    "vct": ["saint vincent and the grenadines", "san vicente y las granadinas", "圣文森特和格林纳丁斯", "saint-vincent-et-les-grenadines", "st. vincent und die grenadinen", "セントビンセント・グレナディーン", "сент-винсент и гренадины"],
+    "ven": ["venezuela", "venezuela", "委内瑞拉", "venezuela", "venezuela", "ベネズエラ", "венесуэла"],
+    "vnm": ["vietnam", "vietnam", "越南", "vietnam", "vietnam", "ベトナム", "вьетнам"],
+    "vut": ["vanuatu", "vanuatu", "瓦努阿图", "vanuatu", "vanuatu", "バヌアツ", "вануату"],
+    "wsm": ["samoa", "samoa", "萨摩亚", "samoa", "samoa", "サモア", "самоа"],
+    "yem": ["yemen", "yemen", "也门", "yémen", "jemen", "イエメン", "йемен"],
+    "zaf": ["south africa", "sudáfrica", "南非", "afrique du sud", "südafrika", "南アフリカ", "южная африка"],
+    "zmb": ["zambia", "zambia", "赞比亚", "zambie", "sambia", "ザンビア", "замбия"],
+    "zwe": ["zimbabwe", "zimbabue", "津巴布韦", "zimbabwe", "simbabwe", "ジンバブエ", "зимбабве"]
+}
     
     if iso_clean in translation_book:
         aliases.update(translation_book[iso_clean])
         
-    # 返回有效的名称列表
     return [a for a in aliases if a and a != 'nan']
 
 # 侧边栏菜单导航
@@ -333,7 +330,7 @@ elif menu == "Productos":
     st.title("📦 Productos - Detalles por Producto")
     
     # -------------------------------------------------------------------------
-    # 【上传 Jira 文件自动更新模块】带全球国家多语言识别与动态列兼容
+    # 【上传 Jira 文件自动更新模块】带智能三级规则匹配
     # -------------------------------------------------------------------------
     st.markdown("### 📥 Sincronización Automática con Jira")
     uploaded_file = st.file_uploader("请上传由 Jira 导出的 CSV（分号分隔）或 Excel 文件：", type=["csv", "xlsx"])
@@ -345,7 +342,6 @@ elif menu == "Productos":
         try:
             # 自动识别格式并读取
             if uploaded_file.name.endswith('.csv'):
-                # 处理你提供的用分号(;)分割的 Jira CSV 文件
                 jira_df = pd.read_csv(uploaded_file, sep=';', engine='python')
             else:
                 jira_df = pd.read_excel(uploaded_file)
@@ -356,16 +352,14 @@ elif menu == "Productos":
             # 兼容读取 Clave de incidencia 和 用于判定更新类型的 ID 列
             actual_cols = jira_df.columns.tolist()
             clave_col = 'Clave de incidencia' if 'Clave de incidencia' in actual_cols else ('Clave de incidence' if 'Clave de incidence' in actual_cols else None)
-            
-            # 💡核心修改：兼容 'ID de la incidencia' 和 'Producto'，只要存在任何一个即可作为判定列
             id_col = 'ID de la incidencia' if 'ID de la incidencia' in actual_cols else ('Producto' if 'Producto' in actual_cols else None)
             
             if clave_col and 'Actualizada' in actual_cols and 'Resumen' in actual_cols and id_col:
                 
                 if st.button("⚡ 预解析并执行多语言 Jira 规则匹配"):
-                    st.session_state.modified_rows = [] # 重置上一次的修改高亮标记
+                    st.session_state.modified_rows = [] 
                     
-                    # 遍历我们主表格数据库（Priority (1).xlsx）里的每一行
+                    # 遍历主数据库中的每一个（国家，产品）组合
                     for index, row in st.session_state.df.iterrows():
                         p_name = str(row['Producto']).strip()
                         c_name = str(row['País']).strip()
@@ -375,53 +369,64 @@ elif menu == "Productos":
                             continue
                         
                         # -----------------------------------------------------
-                        # 核心多语言匹配调用
+                        # 1. 根据多语言和ISO3，找出所有属于这个国家的 Jira 任务
                         # -----------------------------------------------------
                         country_aliases = get_country_aliases(c_name, iso3_val)
                         
-                        matched_jira = pd.DataFrame()
+                        matched_jiras = pd.DataFrame()
                         for alias in country_aliases:
-                            # 使用正则避免匹配错乱 (例如印尼 Indonesia 不会被 India 错误捕获)
                             temp_match = jira_df[
                                 jira_df['Resumen'].astype(str).str.contains(r'\b' + alias + r'\b|' + alias, case=False, na=False)
                             ]
                             if not temp_match.empty:
-                                matched_jira = temp_match
-                                break
+                                matched_jiras = pd.concat([matched_jiras, temp_match])
                         
-                        if not matched_jira.empty:
-                            # 拿到最上面最新的一条 Jira 任务
-                            jira_row = matched_jira.iloc[0]
+                        if not matched_jiras.empty:
+                            # 剔除重复匹配的任务
+                            matched_jiras = matched_jiras.drop_duplicates()
                             
-                            # 提取并解析更新日期
-                            raw_date = str(jira_row['Actualizada']).split()[0]
-                            parsed_date = pd.to_datetime(raw_date, dayfirst=True, errors='coerce')
-                            
-                            # 自动生成固定的 Atlassian 任务超链接
-                            clave = str(jira_row[clave_col]).strip()
-                            new_link = f"https://visagov.atlassian.net/browse/{clave}"
-                            
-                            # 获取判定列（ID 或 Producto）的值用于规则判定
-                            jira_id_val = jira_row[id_col]
-                            is_empty_id = pd.isna(jira_id_val) or str(jira_id_val).strip() == "" or str(jira_id_val).lower() == "nan"
-                            
-                            # 【严格执行判定规则】：
-                            if is_empty_id:
-                                # 1. 内容为空，对应更新：Última actualización completa
-                                st.session_state.df.at[index, 'Última actualización completa'] = parsed_date
-                            else:
-                                # 2. 内容不为空，对应更新：Última actualización parcial
-                                st.session_state.df.at[index, 'Última actualización parcial'] = parsed_date
-                            
-                            # 统一更新链接列
-                            st.session_state.df.at[index, 'Nota_Producto'] = new_link
-                            
-                            # 将被修改的这行存入高亮置顶缓存
-                            st.session_state.modified_rows.append((c_name, p_name))
-                            
-                    st.success(f"🎉 成功完成多语言智能匹配！共发现 {len(st.session_state.modified_rows)} 项数据变更，已在下方用蓝色高亮并为您置顶。请核对后点击下方 'Guardar Cambios' 保存。")
+                            # -----------------------------------------------------
+                            # 2. 遍历该国家的所有任务，严格按照 3 个级别判定归属
+                            # -----------------------------------------------------
+                            for _, jira_row in matched_jiras.iterrows():
+                                jira_id_val = str(jira_row[id_col]).strip()
+                                jira_id_val_lower = jira_id_val.lower()
+                                
+                                # 检查内容是否为空
+                                is_empty_id = pd.isna(jira_row[id_col]) or jira_id_val == "" or jira_id_val_lower == "nan"
+                                
+                                # 解析该 Jira 任务的更新日期和链接
+                                raw_date = str(jira_row['Actualizada']).split()[0]
+                                parsed_date = pd.to_datetime(raw_date, dayfirst=True, errors='coerce')
+                                clave = str(jira_row[clave_col]).strip()
+                                new_link = f"https://visagov.atlassian.net/browse/{clave}"
+                                
+                                # 💡 【核心三级判定规则】：
+                                if is_empty_id:
+                                    # 规则A: 空白 ID -> 代表该国家所有产品的 Completa 更新
+                                    st.session_state.df.at[index, 'Última actualización completa'] = parsed_date
+                                    st.session_state.df.at[index, 'Nota_Producto'] = new_link
+                                    st.session_state.modified_rows.append((c_name, p_name))
+                                    break # 应用成功，不再看旧任务
+                                    
+                                elif jira_id_val_lower == 'parcial':
+                                    # 规则B: 写了 'parcial' -> 代表该国家所有产品的 Parcial 更新
+                                    st.session_state.df.at[index, 'Última actualización parcial'] = parsed_date
+                                    st.session_state.df.at[index, 'Nota_Producto'] = new_link
+                                    st.session_state.modified_rows.append((c_name, p_name))
+                                    break # 应用成功，不再看旧任务
+                                    
+                                elif jira_id_val_lower == p_name.lower():
+                                    # 规则C: 写了具体产品名 (且跟当前循环的产品名一致) -> 代表该单一产品的 Parcial 更新
+                                    st.session_state.df.at[index, 'Última actualización parcial'] = parsed_date
+                                    st.session_state.df.at[index, 'Nota_Producto'] = new_link
+                                    st.session_state.modified_rows.append((c_name, p_name))
+                                    break # 应用成功，不再看旧任务
+                                    
+                                # 如果都不符合（比如写了别的产品的名字），则自动 pass，去看下一条 Jira 记录
+
+                    st.success(f"🎉 成功应用三级智能规则！共发现 {len(st.session_state.modified_rows)} 项数据变更，已在下方用蓝色高亮并为您置顶。请核对后点击下方 'Guardar Cambios' 保存。")
             else:
-                # 友好的报错提示，指出缺失的具体列
                 st.error(f"❌ 上传的文件缺少必要列。系统目前检测到的表头为：{actual_cols}。请确保存在 'Actualizada', 'Resumen'，以及 'ID de la incidencia' 或 'Producto'。")
         except Exception as e:
             st.error(f"处理文件时发生意外错误: {e}")
