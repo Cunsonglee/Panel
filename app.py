@@ -333,7 +333,7 @@ elif menu == "Productos":
     st.title("📦 Productos - Detalles por Producto")
     
     # -------------------------------------------------------------------------
-    # 【上传 Jira 文件自动更新模块】带全球国家多语言识别
+    # 【上传 Jira 文件自动更新模块】带全球国家多语言识别与动态列兼容
     # -------------------------------------------------------------------------
     st.markdown("### 📥 Sincronización Automática con Jira")
     uploaded_file = st.file_uploader("请上传由 Jira 导出的 CSV（分号分隔）或 Excel 文件：", type=["csv", "xlsx"])
@@ -353,11 +353,14 @@ elif menu == "Productos":
             # 清洗列标题的空格
             jira_df.columns = jira_df.columns.str.strip()
             
-            # 兼容读取 Clave de incidencia
+            # 兼容读取 Clave de incidencia 和 用于判定更新类型的 ID 列
             actual_cols = jira_df.columns.tolist()
             clave_col = 'Clave de incidencia' if 'Clave de incidencia' in actual_cols else ('Clave de incidence' if 'Clave de incidence' in actual_cols else None)
             
-            if clave_col and 'Actualizada' in actual_cols and 'Resumen' in actual_cols and 'ID de la incidencia' in actual_cols:
+            # 💡核心修改：兼容 'ID de la incidencia' 和 'Producto'，只要存在任何一个即可作为判定列
+            id_col = 'ID de la incidencia' if 'ID de la incidencia' in actual_cols else ('Producto' if 'Producto' in actual_cols else None)
+            
+            if clave_col and 'Actualizada' in actual_cols and 'Resumen' in actual_cols and id_col:
                 
                 if st.button("⚡ 预解析并执行多语言 Jira 规则匹配"):
                     st.session_state.modified_rows = [] # 重置上一次的修改高亮标记
@@ -398,16 +401,16 @@ elif menu == "Productos":
                             clave = str(jira_row[clave_col]).strip()
                             new_link = f"https://visagov.atlassian.net/browse/{clave}"
                             
-                            # 获取 ID de la incidencia 值用于规则判定
-                            jira_id_val = jira_row['ID de la incidencia']
+                            # 获取判定列（ID 或 Producto）的值用于规则判定
+                            jira_id_val = jira_row[id_col]
                             is_empty_id = pd.isna(jira_id_val) or str(jira_id_val).strip() == "" or str(jira_id_val).lower() == "nan"
                             
-                            # 【严格执行用户的判定规则】：
+                            # 【严格执行判定规则】：
                             if is_empty_id:
-                                # 1. ID 为空，对应更新：Última actualización completa
+                                # 1. 内容为空，对应更新：Última actualización completa
                                 st.session_state.df.at[index, 'Última actualización completa'] = parsed_date
                             else:
-                                # 2. ID 不为空（有产品标记），对应更新：Última actualización parcial
+                                # 2. 内容不为空，对应更新：Última actualización parcial
                                 st.session_state.df.at[index, 'Última actualización parcial'] = parsed_date
                             
                             # 统一更新链接列
@@ -418,7 +421,8 @@ elif menu == "Productos":
                             
                     st.success(f"🎉 成功完成多语言智能匹配！共发现 {len(st.session_state.modified_rows)} 项数据变更，已在下方用蓝色高亮并为您置顶。请核对后点击下方 'Guardar Cambios' 保存。")
             else:
-                st.error(f"❌ 上传的文件格式不正确或缺少必要列。当前表头为：{actual_cols}")
+                # 友好的报错提示，指出缺失的具体列
+                st.error(f"❌ 上传的文件缺少必要列。系统目前检测到的表头为：{actual_cols}。请确保存在 'Actualizada', 'Resumen'，以及 'ID de la incidencia' 或 'Producto'。")
         except Exception as e:
             st.error(f"处理文件时发生意外错误: {e}")
 
