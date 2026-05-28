@@ -220,19 +220,19 @@ elif menu == "Prioridad":
     # 3. 核心计算映射区域：请将下方的英文字母字符串替换为您 Excel 中对应的真实列标题名称！
     # =========================================================================
     COL_A = 'País'                    # 对应公式3, 4中用于条件分组统计的列 (如：A列为国家)
-    COL_I = 'Col_I_Ejemplo'           # 对应公式1中的 I 列数字
-    COL_J = 'Col_J_Ejemplo'           # 对应公式1中的 J 列数字
-    COL_K = 'Col_K_Ejemplo'           # 对应公式1中的 K 列数字
-    COL_L = 'Col_L_Ejemplo'           # 对应公式1中的 L 列数字
-    COL_M = 'Col_M_Ejemplo'           # 对应公式1中的 M 列数字
-    COL_N = 'Col_N_Ejemplo'           # 对应公式1中的 N 列数字
-    COL_O = 'Col_O_Ejemplo'           # 对应公式1中的 O 列数字
-    COL_P = 'Col_P_Ejemplo'           # 对应公式3中被条件求和的 P 列数字
-    COL_Q = 'Actualización regla'     # 对应公式2中的 Q 列日期时间
-    COL_R = 'Actualización Completo'  # 对应公式2中的 R 列日期时间
-    COL_S = 'Col_S_Ejemplo'           # 对应公式5中的 S 列数字
-    COL_T = 'Col_T_Ejemplo'           # 对应公式5中的 T 列数字
-    COL_U = 'Col_U_Ejemplo'           # 对应公式5中的 U 列数字
+    COL_I = 'K (Conversión %)'           # 对应公式1中的 I 列数字
+    COL_J = 'P (Point)'           # 对应公式1中的 J 列数字
+    COL_K = 'E (Extra Keys)'           # 对应公式1中的 K 列数字
+    COL_L = 'F (Documentos)'           # 对应公式1中的 L 列数字
+    COL_M = 'L (Lógica Dinámica)'           # 对应公式1中的 M 列数字
+    COL_N = 'S (Tipo de County details)'           # 对应公式1中的 N 列数字
+    COL_O = 'M (Impacto Precio)'           # 对应公式1中的 O 列数字
+    COL_P = 'P (Point)'           # 对应公式3中被条件求和的 P 列数字
+    COL_Q = 'Última actualización parcial'     # 对应公式2中的 Q 列日期时间
+    COL_R = 'Última actualización completa'  # 对应公式2中的 R 列日期时间
+    COL_S = 'Factor de Tiempo'           # 对应公式5中的 S 列数字
+    COL_T = 'Score Total País'           # 对应公式5中的 T 列数字
+    COL_U = 'Cantidad Prod'           # 对应公式5中的 U 列数字
     # =========================================================================
 
     # 自动安全检查与类型强转（防止 Excel 中夹杂的文本字符破坏数值公式计算）
